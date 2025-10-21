@@ -1,0 +1,34 @@
+{
+   "action": {
+      "default_popup": "popup.html",
+      "default_title": "Prime Sender"
+   },
+   "background": {
+      "service_worker": "js/background.js"
+   },
+   "content_scripts": [ {
+      "css": [ "css/driver.css", "css/content.css" ],
+      "js": [ "js/library/jquery.js", "js/library/driver.js.iife.js", "js/data.js", "js/ga-code.js", "js/translate.js", "js/driver.js", "js/messenger.js", "js/content.js" ],
+      "matches": [ "*://web.whatsapp.com/*" ]
+   }, {
+      "js": [ "js/prime-website.js" ],
+      "matches": [ "*://prime-sender.com/*", "*://primesenderstaging.netlify.app/*" ]
+   } ],
+   "default_locale": "en",
+   "description": "__MSG_Description__",
+   "icons": {
+      "128": "logo/large.png",
+      "16": "logo/small.png",
+      "48": "logo/medium.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxcNfBZ3IsPBf1W7t3FVwhQhSl5RwuALgUL4ssDicOf+Bc818C/9HMvkQjwi+EaD6HgloWaD2by/LqWKFTDpPO3UI6QAA+GajES/pM87emzTpeB6OD0lXC2xEpKMmt3IOZXlRPEb/v6uDJnI2chJjhAxyDE3hOqOfJpdqIWc8U1ujOtiYWSaWTBjSGCNP5ktkFxz6XhoHrBmdFNqzZNLLKnBEoEfOa0zTcEiZaQwfj9UBxmxwgX8dG7vn6w6W5ZkNNIpUt5CuYVU6MufrqhmRnxjGhk3IBK2Juj99Urxz6gNL/+iJuc/hDjqQWWND3euQkj9gwUrbV6T4Dzb/NJ6zHQIDAQAB",
+   "manifest_version": 3,
+   "name": "Prime Sender - Free AI Web Message Sender",
+   "permissions": [ "bookmarks", "storage", "unlimitedStorage", "notifications", "tabs", "identity", "identity.email" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "4.8.3",
+   "web_accessible_resources": [ {
+      "matches": [ "\u003Call_urls>" ],
+      "resources": [ "/js/inject.js", "/logo/*", "/sounds/*" ]
+   } ]
+}
