@@ -754,37 +754,6 @@ async function messanger_popup() {
         `
         modal_content.appendChild(campaignButtons);
 
-        if (!isPremiumFeatureAvailable()) {
-            let country_name = getCountryNameWithSpecificPricing();
-            let pricing_link = "";
-
-            if (RUNTIME_CONFIG.useOldPricingLinks){
-                pricing_link = RUNTIME_CONFIG.basePricingUrl;
-                if (last_plan_type == 'Basic') {
-                    pricing_link += `?country=${country_name}&lastPlan=planExpired&currentPlan=basic`;
-                } else if (last_plan_type == 'Advance') {
-                    pricing_link += `?country=${country_name}&lastPlan=planExpired&currentPlan=advance`;
-                }
-            } else {
-                if (last_plan_type == 'Basic') {
-                    pricing_link = "https://buy.stripe.com/" + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].basic;
-                } else if (last_plan_type == 'Advance') {
-                    pricing_link = "https://buy.stripe.com/" + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].advance;
-                }
-            }
-
-            let timeGapReminderDiv = document.createElement('div');
-            timeGapReminderDiv.className = 'time_gap_reminder_div';
-            timeGapReminderDiv.innerHTML = `<div class="circle">30</div>
-                <p class="text" id="time_gap_reminder_text">Time Gap between messages is 30 sec. Purchase 
-                    ${pricing_link !== ""
-                        ? `<a id="messenger_popup_premium_button" href="${pricing_link}" target="_blank" class="styled_text"> Premium </a>`
-                        : `<span id="messenger_popup_premium_button" class="styled_text"> Premium </span>`
-                    } to reduce time gap between messages.
-                </p>`;
-            modal_content.appendChild(timeGapReminderDiv);
-        }
-
         popup.appendChild(sendingMessageDiv);
         popup.appendChild(campaignDiv);
 
@@ -799,14 +768,11 @@ async function messanger_popup() {
         document.querySelector('.pause_campaign_button')?.addEventListener("click", pauseCampaign);
         loadTips();
 
-        if (document.getElementById("messenger_popup_premium_button")) {
-            document.getElementById("messenger_popup_premium_button").addEventListener("click", function (event) {
-                trackButtonClick("messenger_popup_premium_button");
-                if (!RUNTIME_CONFIG.useOldPricingLinks && last_plan_type !== "Basic" && last_plan_type !== "Advance") {
-                    show_pricing_popup();
-                }
-            });
-        }
+        const timeGapReminderDiv = document.createElement('div');
+        timeGapReminderDiv.className = 'time_gap_reminder_div';
+        timeGapReminderDiv.innerHTML = `<div class="circle">30</div>
+            <p class="text" id="time_gap_reminder_text">Time gap between messages is currently 30 seconds. Adjust it in the settings—no upgrade required.</p>`;
+        modal_content.appendChild(timeGapReminderDiv);
     }
     else
         messanger_popup_div.style.display = 'block';

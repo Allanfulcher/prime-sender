@@ -1,4 +1,4 @@
-var csv_data = [], csv_name = "", my_number = null, my_account_type = null, plan_duration = "",  plan_type = 'Expired', last_plan_type = 'Expired', customer_email,customer_parent_email, popup_numbers = "", expiry_date, created_date;
+var csv_data = [], csv_name = "", my_number = null, my_account_type = null, plan_duration = "Lifetime",  plan_type = 'Free', last_plan_type = 'Free', customer_email,customer_parent_email, popup_numbers = "", expiry_date, created_date;
 let currentLanguage = 'default';
 let allLanguageCodes = ALL_LANGUAGE_CODES;
 let libphone = libphonenumber;
@@ -49,97 +49,15 @@ async function convertPriceToLocale(price) {
 }
 
 async function multipleAccountButton() {
-    let country_name = getCountryNameWithSpecificPricing();
-
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        return `<a href="${RUNTIME_CONFIG.basePricingUrl}multiple-account" target="_blank" class="popup-btn pricing-purple-btn CtaBtn">
-        <span style="white-space:nowrap;">Buy multiple users<br/></span>
-        <span style="white-space:nowrap; color: #fff; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;"><span style="margin-right:3px;">@</span>
-            ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-            <span class="price_class">${MULT25ACCOUNTPRICE[country_name]}</span>/month
-        </span>
-        ${(country_name === 'international' && location_info?.currency != 'USD') ?
-            `<span style="white-space:nowrap; color: #fff; font-size: 12px; line-height: 16px;font-weight:bold;"> 
-        (~<span class="price_class">${await convertPriceToLocale(MULT25ACCOUNTPRICE[country_name].substring(1))}</span>/month)
-        </span>` : ''
-        }
-    </a>`;
-    } else {
-        return `<span class="show_multiple_users" style="white-space:nowrap;">Buy multiple users<br/></span>
-        <span style="white-space:nowrap; color: #fff; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;"><span style="margin-right:3px;">@</span>
-            ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-            <span class="price_class">${MULT25ACCOUNTPRICE[country_name]}</span>/month
-        </span>
-        ${(country_name === 'international' && location_info?.currency != 'USD') ?     
-            `<span style="white-space:nowrap; color: #fff; font-size: 12px; line-height: 16px;font-weight:bold;"> 
-        (~<span class="price_class">${await convertPriceToLocale(MULT25ACCOUNTPRICE[country_name].substring(1))}</span>/month)
-        </span>` : ''
-        }`;
-    }
+    return '';
 }
 
-async function basicButton(pricing_link = "", basicPrice = "", basicConvertedPrice = "", showPrice = true, convertToSpan = false) {
-    let country_name = getCountryNameWithSpecificPricing();
-    let converted_price = basicConvertedPrice;
-    if (!basicConvertedPrice || basicConvertedPrice === "") {
-        converted_price = await convertPriceToLocale(basicPrice.substring(1));
-    }
-    console.log(convertToSpan);
-
-    // Tag & attributes based on convertToSpan
-    const tag = convertToSpan ? 'span' : 'a';
-    const extraAttrs = convertToSpan 
-        ? `class="popup-btn pricing-white-btn CtaBtn show-basic-popup" style="font-weight:bold;"`
-        : `href="${pricing_link}" target="_blank" class="popup-btn pricing-white-btn CtaBtn" style="font-weight:bold;" buttonType="basic"`;
-
-    return `<${tag} ${extraAttrs}>
-        Buy Basic
-        ${showPrice ? `<br/>
-            <span style="white-space:nowrap; color: #009a88; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;">
-                <span style="margin-right:3px;">@</span> 
-                ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-                <span class="price_class">${basicPrice}</span>/month
-            </span>
-            ${(country_name === 'international' && location_info?.currency != 'USD') ?
-                `<span style="white-space:nowrap; color: #009a88; font-size: 12px; line-height: 16px;font-weight:bold;">
-                    (~<span class="price_class">${converted_price}</span>/month)
-                </span>` : ''
-            }` : ""}
-    </${tag}>`;
+async function basicButton() {
+    return '';
 }
 
-async function advanceButton(pricing_link = "", advancePrice = "", advanceConvertedPrice = "", popup_name, showPrice = true, convertToSpan = false) {
-    let country_name = getCountryNameWithSpecificPricing();
-    let converted_price = advanceConvertedPrice;
-    if (!advanceConvertedPrice || advanceConvertedPrice === "") {
-        converted_price = await convertPriceToLocale(advancePrice.substring(1));
-    }
-
-    if (popup_name == 'free_trial_start' || popup_name == 'free_trial_reminder' || popup_name == 'free_trial_expired' || popup_name == 'advance_promo_activated' || popup_name == 'advance_promo_reminder') {
-        btn = getFreeTrialButtonHtml();
-        return btn;
-    }
-
-    // Tag & attributes based on convertToSpan
-    const tag = convertToSpan ? 'span' : 'a';
-    const extraAttrs = convertToSpan
-        ? `class="popup-btn pricing-green-btn CtaBtn show-advance-popup" style="font-weight:bold;"`
-        : `href="${pricing_link}" target="_blank" class="popup-btn pricing-green-btn CtaBtn" style="font-weight:bold;" buttonType="advance"`;
-
-    return `<${tag} ${extraAttrs}>
-        Buy Advance
-        ${showPrice ? `<br/>
-            <span style="white-space:nowrap; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;">
-                <span style="margin-right:3px;">@</span>
-                ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-                <span class="price_class">${advancePrice}</span>/month
-            </span>
-            ${(country_name === 'international' && location_info?.currency != 'USD') ?
-                `<span style="white-space:nowrap; color: #009a88; font-size: 12px; line-height: 16px;font-weight:bold;"> 
-                    (~<span class="price_class">${converted_price}</span>/month)
-                </span>` : ''
-            }` : ""}
-    </${tag}>`;
+async function advanceButton() {
+    return '';
 }
 
 async function fetchTranslations(obj) {
@@ -641,85 +559,17 @@ function initvars() {
         } else {
             trackSystemEvent('my_number_popup', my_number);
         }
-        if (result.plan_type !== undefined){
-            plan_type = result.plan_type;
-        }
-        if (result.plan_duration !== undefined){
-            plan_duration = result.plan_duration;
-
-            if(plan_duration === 'Monthly' && (plan_type === 'Basic' || plan_type === 'Advance')){
-                let shouldShowAnnualPromo = false;
-                if(result.subscribed_date) {
-                    const subscribedDate = new Date(result.subscribed_date);
-                    const currentDate = new Date();
-                    const daysSinceSubscribed = get_days_diff(currentDate, subscribedDate);
-                    shouldShowAnnualPromo = daysSinceSubscribed >= 7;
-                }
-                
-                if(shouldShowAnnualPromo) {
-                    const premiumTab = document.getElementById('select_premium_container');
-                    if(premiumTab) premiumTab.classList.add('monthly-plan');
-                    
-                    document.body.classList.add('monthly-plan-active');
-                    
-                   
-                    const annualContent = document.getElementById('annual_upgrade_content');
-                    if(annualContent) {
-                        annualContent.style.display = 'flex';
-                        const bottomText = annualContent.querySelector('.upgrade-text-bottom');
-                        if(bottomText) {
-                            bottomText.textContent = 'Go Annual';
-                        }
-                    }
-            
-                    const annualPromoBanner = document.getElementById('annual_promo_banner');
-                    if(annualPromoBanner) {
-                        annualPromoBanner.style.display = 'flex';
-                    }
-                } else {
-                    
-                    const premiumTab = document.getElementById('select_premium_container');
-                    if(premiumTab) premiumTab.classList.remove('monthly-plan');
-                    
-                    document.body.classList.remove('monthly-plan-active');
-                    
-                    const annualContent = document.getElementById('annual_upgrade_content');
-                    if(annualContent) {
-                        annualContent.style.display = 'none';
-                    }
-                    
-                    const annualPromoBanner = document.getElementById('annual_promo_banner');
-                    if(annualPromoBanner) {
-                        annualPromoBanner.style.display = 'none';
-                    }
-                }
-            } else {
-                
-                const premiumTab = document.getElementById('select_premium_container');
-                if(premiumTab) premiumTab.classList.remove('monthly-plan');
-                
-                document.body.classList.remove('monthly-plan-active');
-                
-                const annualContent = document.getElementById('annual_upgrade_content');
-                if(annualContent) {
-                    annualContent.style.display = 'none';
-                }
-                
-                const annualPromoBanner = document.getElementById('annual_promo_banner');
-                if(annualPromoBanner) {
-                    annualPromoBanner.style.display = 'none';
-                }
-            }
-        }
+        plan_type = 'Free';
+        plan_duration = 'Lifetime';
+        chrome.storage.local.set({ plan_type, plan_duration });
         if (result.created_date !== undefined) {
             created_date = result.created_date;
         }
         if(result.expiry_date !== undefined){
             expiry_date = result.expiry_date;
         }
-        if(result.last_plan_type !== undefined) {
-            last_plan_type = result.last_plan_type;
-        }
+        last_plan_type = 'Free';
+        chrome.storage.local.set({ last_plan_type });
         if(result.location_info !== undefined) {
             location_info = result.location_info;
         }
@@ -1075,25 +925,7 @@ function showMultipleAccountShimmer() {
 }
 
 function getNonPremiumHeaderText() {
-    if(isAdvancePromo()) {
-        return 'AdvancePromo Enabled – Explore Features';
-    }
-    else if(isExpired()) {
-        switch (last_plan_type) {
-            case 'FreeTrial':
-                return 'FreeTrial Expired – Buy Premium';
-            case 'AdvancePromo':
-                return 'AdvancePromo Expired – Buy Premium';
-            case 'Basic':
-                return 'Basic Plan Expired – Buy Again';
-            case 'Advance':
-                return 'Advance Plan Expired – Buy Again';
-            default:
-                return 'Add Business Features – Buy Premium';
-        };
-    } else {
-        return 'Add Business Features – Buy Premium';
-    }
+    return 'Prime Sender – All Features Included';
 }
 
 function handlePausedCampaign(pausedCampaignData){
@@ -2067,148 +1899,40 @@ function getMessage() {
         window.close();
     });
 
-    $('#premium_annual_button').click(function (event) {
-        let buttonType = $(this).attr('buttonType');
-        if (buttonType && buttonType.length > 0) {
-            trackButtonClick(`annual_promo_banner_${buttonType}_button`);
-        }
-        
-        let country_name = getCountryNameWithSpecificPricing();
-        let annualBasicPricingLink = null, annualAdvancePricingLink = null;
-        if(plan_type == 'Basic'){
-            const pricingLinks = getPricingLink(country_name, 'annually', true);
-            annualBasicPricingLink = pricingLinks.basic;
-        } else{
-            const pricingLinks = getPricingLink(country_name, 'annually', false);
-            annualAdvancePricingLink = pricingLinks.advance;
-        }
-        
-        if (annualBasicPricingLink) {
-            window.open(annualBasicPricingLink, '_blank');
-        } else if (annualAdvancePricingLink) {
-            window.open(annualAdvancePricingLink, '_blank');
-        }
-    });
-
     $('#select_premium_features').click(async function () {
-        const showRedDot = (
-            isPremium() &&
-            !premiumTabRedDotDismissed &&
-            !isMultipleAccount &&
-            subscribed_date &&
-            get_days_diff(new Date(), subscribed_date) > 7
-        );
-
-        const showShimmer = (
-            isPremium() &&
-            !multipleAccountShimmerShown &&
-            !isMultipleAccount &&
-            subscribed_date &&
-            get_days_diff(new Date(), subscribed_date) > 7 &&
-            !document.getElementById('annual_promo_banner')
-        );
-
-        // Hide red dot once tab is clicked
-        if (showRedDot) {
-            premiumTabRedDotDismissed = true;
-            chrome.storage.local.set({ premiumTabRedDotDismissed: true });
-            document.querySelectorAll('.red-dot-superscript').forEach(el => el.remove());
-        }
-        
-        // Show Shimmer once
-        if (showShimmer) {
-            setTimeout(showMultipleAccountShimmer, 500);
-            multipleAccountShimmerShown = true;
-            chrome.storage.local.set({ multipleAccountShimmerShown: true });        
-        }
-        
         document.querySelector('.premium_features_parent_div').classList.add('black_background');
-        document.getElementById("popup_functionality").style.display = 'none';
-        document.getElementById("show_premium_features").style.display = 'block';
-        
-        document.getElementById("select_functionality_container").classList.remove('active');
-        document.getElementById("select_premium_container").classList.add('active');
+        const functionality = document.getElementById('popup_functionality');
+        const premiumFeatures = document.getElementById('show_premium_features');
+        if (functionality) functionality.style.display = 'none';
+        if (premiumFeatures) premiumFeatures.style.display = 'block';
 
-        document.getElementById("add_business_text").style.color = '#fff';
-        document.getElementById("add_business_img").src = 'logo/plus (1).png';
-        document.getElementById("ps-logo-right").src= 'logo/logo-text.png';
-        
-        const annualContent = document.getElementById('annual_upgrade_content');
-        if (annualContent && annualContent.style.display === 'flex') {
-            const bottomText = annualContent.querySelector('.upgrade-text-bottom');
-            if (bottomText) {
-                bottomText.textContent = `${plan_type} Annual`;
-            }
+        const functionalityTab = document.getElementById('select_functionality_container');
+        const premiumTab = document.getElementById('select_premium_container');
+        if (functionalityTab) functionalityTab.classList.remove('active');
+        if (premiumTab) premiumTab.classList.add('active');
+
+        const addBusinessText = document.getElementById('add_business_text');
+        const addBusinessImg = document.getElementById('add_business_img');
+        const logoRight = document.getElementById('ps-logo-right');
+        if (addBusinessText) addBusinessText.style.color = '#fff';
+        if (addBusinessImg) addBusinessImg.src = 'logo/plus (1).png';
+        if (logoRight) logoRight.src = 'logo/logo-text.png';
+
+        const planDetails = document.getElementById('plan_details');
+        if (planDetails) {
+            planDetails.innerHTML = `<span style="font-weight: 700;">Free plan</span> available on : <span style="font-weight: 700;">+${my_number || ''}</span>`;
+        }
+        const customerEmailEl = document.getElementById('customer_email');
+        if (customerEmailEl) {
+            customerEmailEl.innerHTML = customer_email ? `Registered email : <span style="font-weight: 700;">${customer_email}</span>` : '';
+        }
+        const parentEmailEl = document.getElementById('customer_parent_email');
+        if (parentEmailEl) {
+            parentEmailEl.innerHTML = '';
         }
 
-
-        const annualPromoButton = document.querySelector('#premium_annual_button span:last-child');
-        if (annualPromoButton) {
-            annualPromoButton.textContent = `${plan_type} Annual`;
-        }
-
-        if(isBasic() || isAdvance()){
-            document.querySelector('#transfer_premium_button').style.display= "flex";
-        }
-
-        const showCountrySelector= document.querySelector('#show_country_selector');
-        if(showCountrySelector) {
-            const requestTransferBtn= document.querySelector('#request_transfer_btn');
-            if(requestTransferBtn){
-                requestTransferBtn.addEventListener('click', function(){
-                    const inputNumber= document.querySelector('#premium_number_input').value;
-                    if(!inputNumber) return;
-
-                    let { dialCode } = getCountryCodeSelectorValue('#country-code-input-2');
-                    if(dialCode == '00') return;
-
-                    if(dialCode == '52') dialCode += '1';
-                    const new_number= `${dialCode}${inputNumber}`;
-
-                    if(new_number === my_number) {
-                        document.querySelector('#transfer_premium_error').style.display='block';
-                    } else {
-                        document.querySelector('#transfer_premium_error').style.display='none';
-                        sendMessageToBackground({ type: 'transfer_premium', message: `Hi, I would like to transfer the premium from +${my_number} to +${new_number}` });
-                        window.close();
-                    }
-                })
-            }
-            showCountrySelector.addEventListener('click',()=>{
-                const premiumCountrySelectorContainer= document.querySelector('#premium_country_selector_container');
-                chrome.storage.local.get(['subscribed_date','customer_email'], function(result){
-                    if(result.subscribed_date){
-                        premiumCountrySelectorContainer.classList.toggle('hide');
-                        document.querySelector('#my_current_number').innerText = "+"+my_number;
-                    }
-                })
-            })
-        }
-
-        // user info
-        if(plan_type == 'Expired') {
-            let detailsText = getNonPremiumHeaderText() || "";
-            detailsText = detailsText.split('-')[0];
-            document.getElementById("plan_details").innerHTML = `<span style="font-weight: 700;">${detailsText}</span> on : <span style="font-weight: 700;">+${my_number}</span>`;
-        } else {
-            document.getElementById("plan_details").innerHTML = `<span style="font-weight: 700;">${plan_type} plan</span> enabled on : <span style="font-weight: 700;">+${my_number}</span>`;
-        }
-        document.getElementById("customer_email").innerHTML = (customer_email) ? `Registered email : <span style="font-weight: 700;">${customer_email} </span>` : '';
-        document.getElementById("customer_parent_email").innerHTML = (customer_parent_email) ? `Registered parent email : <span style="font-weight: 700;">${customer_parent_email} </span>` : '';
-
-        if (isPremium()) {
-            // document.querySelector(".premium_feature_block").style.display = "flex";
-            document.getElementById("add_business_img").src = "logo/user-2.png";
-        }
-        // showing pie percentage
-        changeInputPercentage();
-        // showMultipleAccountSection();
         showFaqsSection();
-        await showBuyPremiumButtons();
-        // calling invoice function
-        if(RUNTIME_CONFIG.displayInvoiceDownload){
-            getInvoiceData();
-        }
+        await showFreePlanMessage();
     });
     $('#select_functionality').click(function () {
         document.querySelector('.premium_features_parent_div').classList.remove('black_background');
@@ -2222,23 +1946,12 @@ function getMessage() {
         document.getElementById("add_business_img").src = 'logo/plus.png';
         document.getElementById("ps-logo-right").src= 'logo/logo-text-light.png';
         
-        // Update annual upgrade content text when tab becomes inactive
-        const annualContent = document.getElementById('annual_upgrade_content');
-        if (annualContent && annualContent.style.display === 'flex') {
-            const bottomText = annualContent.querySelector('.upgrade-text-bottom');
-            if (bottomText) {
-                bottomText.textContent = 'Go Annual';
-            }
+        const userImg = document.getElementById("add_business_img");
+        if (userImg) {
+            userImg.src = "logo/plus.png";
+            userImg.style.width = '90%';
+            userImg.style.height = '90%';
         }
-        
-        // user info
-        if (isPremium()) {
-            document.querySelector(".premium_feature_block").style.display = "flex";
-            const userImg = document.getElementById("add_business_img");
-            userImg.src = "logo/user-1.png";
-            userImg.style.width = '80%';
-            userImg.style.height = '70%';
-        };
     });
     $('#back_to_functionality').click(function () {
         document.getElementById("popup_functionality").style.display = 'block';
@@ -2939,43 +2652,43 @@ function trackGenericEvent(event, data) {
 }
 
 function isExpired() {
-    return (plan_type === 'Expired');
+    return false;
 }
 
 function isBasic() {
-    return (plan_type === 'Basic');
+    return true;
 }
 
 function isAdvance() {
-    return (plan_type === 'Advance');
+    return true;
 }
 
 function isPremium() {
-    return (plan_type === 'Basic' || plan_type === 'Advance');
+    return true;
 }
 
 function isFreeTrial() {
-    return (plan_type === 'FreeTrial'); 
+    return false;
 }
 
 function isAdvancePromo() {
-    return (plan_type === 'AdvancePromo');
+    return false;
 }
 
 function isTrial() {
-    return (plan_type === 'FreeTrial' || plan_type === 'AdvancePromo');
+    return false;
 }
 
 function isBasicFeatureAvailable() {
-    return (isBasic() || isTrial());
+    return true;
 }
 
 function isAdvanceFeatureAvailable() {
-    return (isAdvance() || isAdvancePromo());
+    return true;
 }
 
 function isPremiumFeatureAvailable() {
-    return (isPremium() || isTrial());
+    return true;
 }
 
 function isPremiumExpired() {
@@ -4987,157 +4700,22 @@ const get_days_diff = (date1, date2) => {
 
 // changing pie chart percentage
 function changeInputPercentage() {
-    chrome.storage.local.get(['premiumUsageObject'], async function (result) {
-        let premiumUsageObject = result.premiumUsageObject;
-        let used = 0;
-        let message;
-        let feature1 = null, feature2 = null, feature3 = null;
-        for (const key in premiumUsageObject) {
-            if (premiumUsageObject[key] == true)
-                used++;
-            else if (key != 'lastDate' && key != 'lastMonth') {
-                let fet = getFet(key);
-                if (feature1 == null)
-                    feature1 = fet;
-                else if (feature2 == null)
-                    feature2 = fet;
-                else if (feature3 == null)
-                    feature3 = fet;
-            }
-        }
-        let total;
-        if (isAdvance()) {
-            total = 10
-        } else if (isBasic()) {
-            total = 8;
-        }
-        else {
-            used = 0;
-            total = 10;
-        }
-        let percentage = used / total * 100;
-        if (!isPremium()) {
-            percentage = 0;
-        }
-        document.getElementsByClassName('premium-utlisation-precentage')[0].innerText = `${percentage}%`;
-        let showPercentage = 100 - percentage;
-        const pieElement = document.getElementById("pie")
-        pieElement.style.backgroundImage = `conic-gradient(#000 ${showPercentage.toString()}%, #009188 0%)`;
-
-        let country_name = getCountryNameWithSpecificPricing();
-        let pricing_link = "";
-        if (RUNTIME_CONFIG.useOldPricingLinks){
-            pricing_link = RUNTIME_CONFIG.basePricingUrl;
-            if (last_plan_type == 'Basic') {
-                pricing_link += `?country=${country_name}&lastPlan=planExpired&currentPlan=basic`;
-            } else if (last_plan_type == 'Advance') {
-                pricing_link += `?country=${country_name}&lastPlan=planExpired&currentPlan=advance`;
-            }
-        } else {
-            if (last_plan_type == 'Basic') {
-                pricing_link = "https://buy.stripe.com/" + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].basic;
-            } else if (last_plan_type == 'Advance') {
-                pricing_link = "https://buy.stripe.com/" + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].advance;
-            }
-        }
-        // message part
-        if(percentage == 100){
-            message =`<p>${await translate("Congrats! Your premium features utilisation is at 100%")}</p>`
-        }
-        else if(!isPremium()){
-            if (RUNTIME_CONFIG.useOldPricingLinks) {
-                message = `<p>
-                    <span>${await translate("Your premium utilisation is at "+percentage+"%. Please purchase premium to utilise all the features.")}</span>
-                    <span>${await translate("To checkout pricing")} </span>
-                    <a class="CtaBtn" href="${pricing_link}" target="_blank" style="color: #009A88; font-weight: 800;">${await translate("Click Here")}</a>  -
-                    <span style="color: #2758D4">${await translate("Discount now available")}</span>
-                </p>`;
-            } else {
-                message =`<p>
-                    <span>${await translate("Your premium utilisation is at "+percentage+"%. Please purchase premium to utilise all the features.")}</span>
-                    <span>${await translate("To checkout pricing")} </span>
-                    ${pricing_link !== "" 
-                        ? `<a class="CtaBtn" href="${pricing_link}" target="_blank" style="color: #009A88; font-weight: 800;">${await translate("Click Here")}</a>` 
-                        : `<span class="CtaBtn show_pricing_popup" style="color: #009A88; font-weight: 800;">${await translate("Click Here")}</span>`
-                    }  -
-                    <span style="color: #2758D4">${await translate("Discount now available")}</span>
-                </p>`
-            }
-        }
-        else {
-            message = `<p>
-                <span style="color: #FFA500">Alert: </span>
-                <span>${await translate("You are not using all the features you have paid for! You have used "+percentage+"% of the paid features in the last week. Please use features like ")}</span>
-                <span style="color: #009A88; font-weight: 800;">${feature1 !=null ? `'${feature1}'`: ''}</span> 
-                <span style="color: #009A88; font-weight: 800;">${feature2!=null ? `, '${feature2}'`:""}</span>
-                <span style="color: #009A88; font-weight: 800;">${feature3!=null ? ` and '${feature3}'`:""} </span> 
-                <span>${await translate("to utilise premium to the fullest. Click on ")}</span>
-                <span class="CtaBtn" id="premium_help" style="text-decoration: underline; cursor: pointer;">${await translate("Live Support")}</span> 
-                <span>${await translate(" to understand these features in detail")}</span>
-            </p>`
-        }
-        document.getElementById('premium_utilisation_text').innerHTML = message;
-
-        $('#premium_help').click(function () {
-            sendMessageToBackground({ type: 'help' });
-            trackButtonClick('chat_support');
-            window.close();
-        });
-    })
+    const utilisationContainer = document.getElementById('premium_utilisation_container');
+    if (utilisationContainer) {
+        utilisationContainer.style.display = 'none';
+    }
 }
 
 async function getMultipleAccountsData() {
-    chrome.storage.local.get(['multipleAccountsData'], async function (res) {
-        if (!res || !res?.isFetchedToday || subscribed_date == getTodayDate()) {
-            try {
-                const res = await fetch('api', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email: parentEmail })
-                });
-                // const data = await 
-            } catch (error) {
-                console.log("Error while fetching multiple accounts data", error);
-            }
-        } else {
-        }
-    });
+    return;
 }
 
 function showMultipleAccountSection() {
-    getMultipleAccountsData();
-    if (!isMultipleAccount) return;
-    const multiple_account_bloc = document.querySelector(".mult_account_block");
-    multiple_account_bloc.classList.remove('hide');
-    let show_more_html = "", show_less_html = "";
-    let top_html = `<div style="color:#fff;display:flex;justify-content:flex-start;align-items:center;gap:5px;flex-wrap:wrap;">
-            <p style="margin:0px !important;">Other numbers in the plan :</p>`;
-    show_more_html = top_html
-    for(let i=0; i<5; i++)
-        show_more_html+=`<span class="mult_num_tag" style="background:#009a88 !important">${otherNumbers[i]}</span>`
-    show_more_html+=`<span class="mult_show_more_section">... <span class="show_all_mult_numbers" style="cursor:pointer;text-decoration:underline;">show more</span></span></div>`;
-    show_more_html+= '</div>';
-
-    show_less_html= top_html;
-    for(let i=5; i<otherNumbers.length; i++)
-        show_less_html+= `<span class="mult_num_tag" style="background:#009a88 !important">${otherNumbers[i]}</span>`
-    show_less_html+=`<span class="mult_show_more_section"><span class="show_all_mult_numbers" style="cursor:pointer;text-decoration:underline;">show less</span></span></div>`;
-    show_less_html+= '</div>';
-    multiple_account_bloc.innerHTML = show_more_html;
-
-    document.querySelector('.mult_show_more_section').addEventListener('click', function(){
-        showAllMultNumbers = !showAllMultNumbers;
-        if(showAllMultNumbers)
-            multiple_account_bloc.innerHTML = show_more_html;
-        else
-            multiple_account_bloc.innerHTML = show_less_html;
-        document.querySelector('.show_all_mult_numbers').addEventListener('click', function(){
-            showAllMultNumbers = !showAllMultNumbers;
-            showMultipleAccountSection();
-        });
-    })
+    const multipleAccountBlock = document.querySelector('.mult_account_block');
+    if (multipleAccountBlock) {
+        multipleAccountBlock.classList.add('hide');
+        multipleAccountBlock.innerHTML = '';
+    }
 }
 
 function showFaqsSection() {
@@ -5179,193 +4757,16 @@ function showFaqsSection() {
 }
 
 function getFreeTrialButtonHtml() {
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        return `<a href="${RUNTIME_CONFIG.basePricingUrl}" target="_blank" class="popup-btn pricing-green-btn CtaBtn" style="font-weight:bold;">
-                    Buy Premium
-                </a>`;
-    } else {
-        return `<span class="popup-btn pricing-green-btn CtaBtn show_pricing_popup" id="show_pricing_popup" style="font-weight:bold;">
-                    Buy Premium
-                </span>`;
-    }
+    return '';
 }
 
-async function getBasicPremiumExpiredButton(basicPrice, basicConvertedPrice, advancePrice, advanceConvertedPrice, pricing_link){
-    let country_name = getCountryNameWithSpecificPricing();
-    let basic_link, advance_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        basic_link = pricing_link + "basic";
-        advance_link = pricing_link + "advance";
-    } else {
-        basic_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].basic;
-        advance_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].advance;
-    }
-    const basicButtonHtml = await basicButton(basic_link,basicPrice,basicConvertedPrice,false,!RUNTIME_CONFIG.useOldPricingLinks)
-    const advanceButtonHtml = await advanceButton(advance_link,advancePrice,advanceConvertedPrice,"",false,!RUNTIME_CONFIG.useOldPricingLinks);
-
-    return {basicButtonHtml, advanceButtonHtml};
-}
-
-async function getAdvancePremiumExpiredButton(advancePrice, advanceConvertedPrice, pricing_link){
-    let country_name = getCountryNameWithSpecificPricing();
-    let advance_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        advance_link = pricing_link + "advance";
-    } else {
-        advance_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].advance;
-    }
-    const advanceButtonHtml = await advanceButton(advance_link,advancePrice,advanceConvertedPrice,"",false,!RUNTIME_CONFIG.useOldPricingLinks)
-    return advanceButtonHtml
-}
-
-async function showBuyPremiumButtons() {
-    let pricing_data;
-    if(last_plan_type == 'FreeTrial' || plan_type == 'FreeTrial')
-      pricing_data = PRICING_DATA["free_trial_expired"];
-    else if (last_plan_type == 'AdvancePromo' || plan_type == 'AdvancePromo')
-      pricing_data = PRICING_DATA["advance_promo_expired"];
-    else
-      pricing_data = PRICING_DATA['premium_expired'];
-    if (!pricing_data) return '';
-
-    let buy_premium_section = document.querySelector("#buy_premium_block");
-    let premium_buttons_html = `
-            <div class="premium_features_divider">
-   <p style="z-index: 1000; color: #fff; margin: 0px; margin-left: 0px; padding-left: 0px; ">Buy ${(plan_type=='Basic' || plan_type=='Advance')?'Multiple Users':'Premium'} :</p>
-        </div>`;
-
-    let country_name = getCountryNameWithSpecificPricing();
-    let advancePrice = pricing_data.advance_price[country_name];
-    let basicPrice = pricing_data.basic_price[country_name];
-    let advanceConvertedPrice = await convertPriceToLocale(advancePrice.substring(1));
-    let basicConvertedPrice = await convertPriceToLocale(basicPrice.substring(1));
-
-    let pricing_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        pricing_link = `${RUNTIME_CONFIG.basePricingUrl}?country=${country_name}&lastPlan=${pricing_data.lastPlan}&currentPlan=`;
-    } else {
-        pricing_link = 'https://buy.stripe.com/';
-    }
-
-    if(plan_type == 'FreeTrial' || (plan_type == 'Expired' && last_plan_type == 'FreeTrial')) {
-        premium_buttons_html += getFreeTrialButtonHtml();
-    } else if (plan_type == 'AdvancePromo' || (plan_type == 'Expired' && last_plan_type == 'AdvancePromo')) {
-        premium_buttons_html += getFreeTrialButtonHtml();
-    } else if(plan_type == 'Expired'){
-        if(last_plan_type == 'Basic'){
-            let {basicButtonHtml, advanceButtonHtml} = await getBasicPremiumExpiredButton(basicPrice, basicConvertedPrice, advancePrice, advanceConvertedPrice, pricing_link);
-            premium_buttons_html += basicButtonHtml + advanceButtonHtml;
-        } else if(last_plan_type == 'Advance'){
-            let advanceButtonHtml = await getAdvancePremiumExpiredButton(advancePrice, advanceConvertedPrice, pricing_link);
-            premium_buttons_html += advanceButtonHtml;
-        }
-
-        if (RUNTIME_CONFIG.useOldPricingLinks){
-            premium_buttons_html += 
-            `<br /> <div style="width:100%;display:flex;justify-content:flex-start;align-items:center;margin-left:-16px;">
-                <a href="${RUNTIME_CONFIG.basePricingUrl}multiple-account" target="_blank" style="color:#009a88;font-size:14px;text-decoration:underline;font-weight:bold;display:flex;align-items:center;"><img src="logo/multiple-users-silhouette.png" class="multiple_users" alt="">Purchase for multiple users</a>
-            </div>`
-        } else {
-            premium_buttons_html += 
-            `<br /> <div style="width:100%;display:flex;justify-content:flex-start;align-items:center;margin-left:-16px;">
-                <span class="show_multiple_users" style="color:#009a88;font-size:14px;text-decoration:underline;font-weight:bold;display:flex;align-items:center; cursor: pointer;"><img src="logo/multiple-users-silhouette.png" class="multiple_users" alt="">Purchase for multiple users</span>
-            </div>`
-        }
-    } else {
-        if (RUNTIME_CONFIG.useOldPricingLinks){
-            premium_buttons_html += 
-            `<div style="width:100%;display:flex;justify-content:flex-start;align-items:center;margin-left:-16px;">
-                <a href="${RUNTIME_CONFIG.basePricingUrl}multiple-account" target="_blank" style="color:#009a88;font-size:14px;text-decoration:underline;font-weight:bold;display:flex;align-items:center;"><img src="logo/multiple-users-silhouette.png" class="multiple_users" alt="">Purchase for multiple users</a>
-            </div>`
-        } else {
-            premium_buttons_html += 
-            `<div style="width:100%;display:flex;justify-content:flex-start;align-items:center;margin-left:-16px;">
-                <span class="show_multiple_users" style="color:#009a88;font-size:14px;text-decoration:underline;font-weight:bold;display:flex;align-items:center; cursor: pointer;"><img src="logo/multiple-users-silhouette.png" class="multiple_users" alt="">Purchase for multiple users</span>
-            </div>`
-        }
-    }
-    
-
-    buy_premium_section.innerHTML = premium_buttons_html;
-    
-    // Add multiple account button to the container in the same line
-    const multipleAccountBtn = await multipleAccountButton();
-    const buttonContainer = buy_premium_section.querySelector('#multiple_account_button_container');
-    if (buttonContainer) {
-        buttonContainer.innerHTML = multipleAccountBtn;
-    }
+async function getBasicPremiumExpiredButton() {
+    return '';
 }
 
 
 async function getInvoiceData() {
-    chrome.storage.local.get(['invoiceObject', 'firstInvoicePdf'], function (result) {
-        let data = [];
-        const dates = result.invoiceObject;
-        if (dates == undefined) {
-            data = [];
-        } else {
-            data = dates;
-        }
-
-        const invoiceInputSection = document.getElementById("invoice_input");
-        let optionsHtml = "";
-
-        if (data.length > 0) {
-            data.map((item) => optionsHtml += `<option value="${item.date}">${item.date}</option>`);
-        } else {
-            optionsHtml = `<option value="invoice_not_found">No Receipt Found</option>`;
-        }
-
-        if (optionsHtml == '') {
-            optionsHtml = `<option value="invoice_not_found">No Receipt Found</option>`;
-        }
-
-        invoiceInputSection.innerHTML = optionsHtml;
-
-        if (data.length > 0) {
-            const first = data[0];
-            if (result.firstInvoicePdf) {
-                document.getElementById('download_invoice_button').href = result.firstInvoicePdf;
-            } else {
-                fetchInvoicePdf(first.date, first.id, true);
-            }
-        }
-
-        invoiceInputSection.addEventListener('change', (e) => {
-            const selectedDate = e.target.value;
-            const invoice = data.find((item) => item.date == selectedDate);
-
-            if (invoice) {
-                if (invoice.date === data[0].date) {
-                    chrome.storage.local.get(['firstInvoicePdf'], (res) => {
-                        if (res.firstInvoicePdf) {
-                            document.getElementById('download_invoice_button').href = res.firstInvoicePdf;
-                        } else {
-                            fetchInvoicePdf(invoice.id, true);
-                        }
-                    });
-                } else {
-                    fetchInvoicePdf(invoice.id, false);
-                }
-            }
-        });
-
-        const invoiceButtonLoader = document.getElementById("invoice_button_loader");
-        const invoiceButtonText = document.getElementById("invoice_button_text");
-        const downloadInvoiceButton = document.getElementById('download_invoice_button');
-
-        downloadInvoiceButton.addEventListener("click", () => {
-            invoiceButtonLoader.style.display = "flex";
-            invoiceButtonText.style.display = "none";
-
-            setTimeout(() => {
-                if (invoiceButtonLoader && invoiceButtonText) {
-                    invoiceButtonLoader.style.display = "none";
-                    invoiceButtonText.style.display = "flex";
-                }
-            }, 5000);
-        });
-    });
+    return;
 }
   
 async function fetchInvoicePdf(id, isFirst = false) {
