@@ -62,7 +62,7 @@ let my_number = null, my_email = null, my_name = null, my_account_type = null;
 
 let my_name_email_pushed = false, my_name_fetched = false, my_email_fetched = false, trial_popups_shown = false;
 
-let logged_in_user = null, plan_type = 'Expired', last_plan_type = "Basic", plan_duration = "", mult_acc_numbers = [];
+let logged_in_user = null, plan_type = 'Free', last_plan_type = "Free", plan_duration = "Lifetime", mult_acc_numbers = [];
 
 let expiry_date = null;
 
@@ -451,70 +451,8 @@ function download_unsaved_contacts() {
     trackButtonClick("download_contacts");
 }
 
-async function showBuyPremiumButtons() {
-    let pricing_data;
-    if(last_plan_type == 'FreeTrial' || plan_type == 'FreeTrial')
-      pricing_data = PRICING_DATA["free_trial_expired"];
-    else if (last_plan_type == 'AdvancePromo' || plan_type == 'AdvancePromo')
-        pricing_data = PRICING_DATA["advance_promo_expired"];
-    else 
-      pricing_data = PRICING_DATA['premium_expired'];
-    if (!pricing_data) return '';
-
-    let country_name = getCountryNameWithSpecificPricing();
-    let result = await chrome.storage.local.get(['isMultipleAccount']);
-    let isMultipleAccountAvailable = result.isMultipleAccount;
-    let advancePrice = pricing_data.advance_price[country_name];
-    let basicPrice = pricing_data.basic_price[country_name];
-    let advanceConvertedPrice = await convertPriceToLocale(advancePrice.substring(1));
-    let basicConvertedPrice = await convertPriceToLocale(basicPrice.substring(1));
-
-    let pricing_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        pricing_link = `${RUNTIME_CONFIG.basePricingUrl}?country=${country_name}&lastPlan=${pricing_data.lastPlan}&currentPlan=`;
-    } else {
-        pricing_link = 'https://buy.stripe.com/';
-    }
-
-    if (plan_type == 'FreeTrial' || (plan_type == 'Expired' && last_plan_type == 'FreeTrial')) {
-        return getFreeTrialButtonHtml();
-    } else if (plan_type == 'AdvancePromo' || (plan_type == 'Expired' && last_plan_type == 'AdvancePromo')) {
-        return getFreeTrialButtonHtml();
-    } else if(plan_type == 'Expired'){
-        if(last_plan_type == 'Basic'){
-            let {basicButtonHtml, advanceButtonHtml} = await getBasicPremiumExpiredButton(basicPrice, basicConvertedPrice, advancePrice, advanceConvertedPrice, pricing_link);
-            return basicButtonHtml + advanceButtonHtml;
-        } else if(last_plan_type == 'Advance'){
-            let advanceButtonHtml = await getAdvancePremiumExpiredButton(advancePrice, advanceConvertedPrice, pricing_link);
-            return advanceButtonHtml;
-        }
-    } else {
-        let annualButtonHtml = '';
-        if (plan_duration === 'Monthly') {
-            const pricing_page_link = 'https://buy.stripe.com/'+PRICING_PAGE_LINK[country_name].annually[plan_type.toLowerCase()];
-            annualButtonHtml = `
-                <div class="buy_annual_button_section">
-                    <a href="${pricing_page_link}" target="_blank" class="buy-annual-popup-btn" buttonType="${plan_type.toLowerCase()}_annual">
-                        <span class="annual_button_top_span"><img src="${yellow_star}" style="width:15px;"/>Save 40% with</span>
-                        <span style="font-weight:bold;">${plan_type} Annual</span>
-                    </a>
-                </div>`;
-        }
-        
-        let buttonHtml =
-            `<div style="width:100%;display:flex;justify-content:center;align-items:center;flex-direction:column">
-                ${annualButtonHtml}
-                ${!isMultipleAccountAvailable 
-                    ? `<div style="width:100%;display:flex;justify-content:center;align-items:center;">
-                        ${RUNTIME_CONFIG.useOldPricingLinks 
-                            ? `<a href="${RUNTIME_CONFIG.basePricingUrl}multiple-account" target="_blank" style="color:#009a88;font-size:12px;text-decoration:underline;display:flex;align-items:center;"><img src="${multiple_users}" class="multiple_users" alt="">Purchase for multiple users</a>` 
-                            : `<span class="show_multiple_users" style="color:#009a88;font-size:12px;text-decoration:underline;display:flex;align-items:center;cursor:pointer;"><img src="${multiple_users}" class="multiple_users" alt="">Purchase for multiple users</span>`
-                        }
-                    </div>` 
-                    : ''}
-            </div>`;
-        return buttonHtml;
-    }   
+async function showFreePlanMessage() {
+    return `<div class="free-plan-message" data-translate-text>Prime Sender now includes every feature for free.</div>`;
 }
 
 async function prime_profile_popup() {
@@ -590,8 +528,8 @@ async function prime_profile_popup() {
         });
     });
 
-    const buyPremiumHtml = await showBuyPremiumButtons();
-    bodyHtml += `<div class="premium_feature_block" id="buy_premium_block" style="border:none;display:flex;justify-content:center;align-items:center;gap:10px;" dir="ltr">${buyPremiumHtml}</div>`;
+    const freePlanHtml = await showFreePlanMessage();
+    bodyHtml += `<div class="premium_feature_block" id="buy_premium_block" style="border:none;display:flex;justify-content:center;align-items:center;gap:10px;" dir="ltr">${freePlanHtml}</div>`;
 
     bodySection.innerHTML = bodyHtml;
 
@@ -2074,43 +2012,43 @@ function show_trial_popups(){
 }
 
 function isExpired() {
-    return (plan_type === 'Expired');
+    return false;
 }
 
 function isBasic() {
-    return (plan_type === 'Basic');
+    return true;
 }
 
 function isAdvance() {
-    return (plan_type === 'Advance');
+    return true;
 }
 
 function isPremium() {
-    return (plan_type === 'Basic' || plan_type === 'Advance');
+    return true;
 }
 
 function isFreeTrial() {
-    return (plan_type === 'FreeTrial'); 
+    return false;
 }
 
 function isAdvancePromo() {
-    return (plan_type === 'AdvancePromo');
+    return false;
 }
 
 function isTrial() {
-    return (plan_type === 'FreeTrial' || plan_type === 'AdvancePromo');
+    return false;
 }
 
 function isBasicFeatureAvailable() {
-    return (isBasic() || isTrial());
+    return true;
 }
 
 function isAdvanceFeatureAvailable() {
-    return (isAdvance() || isAdvancePromo());
+    return true;
 }
 
 function isPremiumFeatureAvailable() {
-    return (isPremium() || isTrial());
+    return true;
 }
 
 function isSpecialCountryFreeTrial() {
@@ -2131,37 +2069,21 @@ function isSpecialCountryFreeTrial() {
 }
 
 function fetch_plan_details() {
-    if (!my_number) 
-        return;
-
-    if (my_name_fetched && my_email_fetched) 
-        my_name_email_pushed = true;
-    
-    fetch_data(my_number, my_email, my_name)
-        .then(res => {
-            handle_response(res);
-        })
-        .catch(err => {     
-            trackError("fetch_plan_api_error", err);
-            console.error("Error fetching number data:", err);
-        });
+    plan_type = 'Free';
+    last_plan_type = 'Free';
+    plan_duration = 'Lifetime';
+    chrome.storage.local.set({
+        plan_type,
+        last_plan_type,
+        plan_duration
+    });
 }
 
 async function fetch_data(number, email = '', name = '') {
-    var url = `${AWS_API.PLAN_FETCH}?phone=${number}&email=${email}&name=${name}`;
-    return new Promise(function (resolve, reject) {
-        $.ajax({
-            type: "GET",
-            url: url,
-            success: function (response) {
-                resolve(response.body);
-            },
-            error: function (error) {
-                reject(error);
-            },
-            dataType: "json",
-            contentType: "application/json"
-        });
+    return Promise.resolve({
+        plan_type: 'Free',
+        last_plan_type: 'Free',
+        plan_duration: 'Lifetime',
     });
 }
 
@@ -2288,107 +2210,12 @@ async function convertPriceToLocale(price) {
 }
 
 function getFreeTrialButtonHtml() {
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        return `<a href="${RUNTIME_CONFIG.basePricingUrl}" target="_blank" class="popup-btn pricing-green-btn CtaBtn" style="font-weight:bold;">
-                    Buy Premium
-                </a>`;
-    } else {
-        return `<span class="popup-btn pricing-green-btn CtaBtn" id="show_pricing_popup" style="font-weight:bold;">
-                    Buy Premium
-                </span>`;
-    }
+    return '';
 }
 
 
-async function getBasicPremiumExpiredButton(basicPrice, basicConvertedPrice, advancePrice, advanceConvertedPrice, pricing_link){
-    let country_name = getCountryNameWithSpecificPricing();
-    let basic_link, advance_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        basic_link = pricing_link + "basic";
-        advance_link = pricing_link + "advance";
-    } else {
-        basic_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].basic;
-        advance_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].advance;
-    }
-    const basicButtonHtml = await basicButton(basic_link,basicPrice,basicConvertedPrice,false,!RUNTIME_CONFIG.useOldPricingLinks)
-    const advanceButtonHtml = await advanceButton(advance_link,advancePrice,advanceConvertedPrice,"",false,!RUNTIME_CONFIG.useOldPricingLinks);
-
-    return {basicButtonHtml, advanceButtonHtml};
-}
-
-async function getAdvancePremiumExpiredButton(advancePrice, advanceConvertedPrice, pricing_link){
-    let country_name = getCountryNameWithSpecificPricing();
-    let advance_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        advance_link = pricing_link + "advance";
-    } else {
-        advance_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].advance;
-    }
-    const advanceButtonHtml = await advanceButton(advance_link,advancePrice,advanceConvertedPrice,"",false,!RUNTIME_CONFIG.useOldPricingLinks)
-    return advanceButtonHtml
-}
-
-function getAnnualButtonHtml(){
-    let country_name = getCountryNameWithSpecificPricing();
-    let pricing_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        pricing_link = `${RUNTIME_CONFIG.basePricingUrl}?country=${country_name}&lastPlan=${last_plan_type}&currentPlan=${plan_type}&hideMonthly=true`;
-    } else {
-        pricing_link = 'https://buy.stripe.com/' + PRICING_PAGE_LINK[country_name]["annually"][plan_type.toLowerCase()];
-    }
-
-    let annualButton = 
-        `<a href="${pricing_link}" target="_blank" class="popup-btn pricing-green-btn CtaBtn" style="font-weight:bold;">
-            Buy Annual 
-        </a>`;
-    return annualButton;
-}
-
-function displayNotification(message, daysAfterInstall, planType, gapBetweenDays) {
-    if (!RUNTIME_CONFIG.displayNotification) {
-        return;
-    }
-
-    const prime_icon = document.getElementById("prime_profile");
-    const side_panel = getDocumentElement('side_panel')
-    const currentDate = Date.now();  
-    const htmlString = `
-      <div class="notification-wrapper">
-        <div class="notification">
-          ${message}
-        </div>
-      </div>
-    `;
-
-    chrome.storage.local.get(["created_date","lastNotification", "deliveryReports"], (res) => {
-        const msInDay = 24 * 60 * 60 * 1000;
-      const daysSinceInstallation = Math.floor((currentDate - new Date(res.created_date)) / msInDay);
-      const lastNotification = res.lastNotification || 0;
-      const daysSinceLastNotification = (currentDate - lastNotification) / msInDay;
-  
-      let lastDeliveryDate = 0;
-      if (Array.isArray(res.deliveryReports) && res.deliveryReports.length > 0) {
-        const lastReport = res.deliveryReports[res.deliveryReports.length - 1];
-        lastDeliveryDate = lastReport.date || 0;
-      }
-  
-      const daysSinceLastDelivery = (currentDate - lastDeliveryDate) / msInDay;
-      const shouldShowNotification =
-        prime_icon &&
-        daysSinceInstallation >= daysAfterInstall &&
-        plan_type === planType &&
-        (lastNotification === 0 || daysSinceLastNotification >= gapBetweenDays) &&
-        (lastDeliveryDate === 0 || daysSinceLastDelivery >= 3); 
-
-        if (shouldShowNotification) {
-            side_panel.style.marginTop = "54px"
-            side_panel.style.backgroundColor=  "var(--chatlist-panel-background)";
-            prime_icon.innerHTML += htmlString;
-            chrome.storage.local.set({ lastNotification: currentDate });
-        }
-  
-
-    });
+async function getBasicPremiumExpiredButton() {
+    return '';
 }
 
 function getPricingLink(countryName, duration, both = true) {
@@ -2415,110 +2242,7 @@ function getPricingLink(countryName, duration, both = true) {
 
   
 async function create_pricing_buttons_html(popup_name) {
-    let pricing_data = PRICING_DATA[popup_name];
-    if (!pricing_data) return '';
-    if(popup_name === "advance_promo_expired"){
-        pricing_data.lastPlan = "AdvancePromo"
-    }
-    let country_name = getCountryNameWithSpecificPricing();
-    let advancePrice = pricing_data.advance_price[country_name];
-    let basicPrice = pricing_data.basic_price[country_name];
-    let advanceConvertedPrice = await convertPriceToLocale(advancePrice.substring(1));
-    let basicConvertedPrice = await convertPriceToLocale(basicPrice.substring(1));
-
-    let pricingLinks = getPricingLink(country_name, plan_duration ,plan_type === "Basic") || {};
-    let annualBasicPricingLink = pricingLinks.basic || "";
-    let annualAnnualPricingLink = pricingLinks.advance || "";
-
-    let pricing_link, basic_link, advance_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        pricing_link = `${RUNTIME_CONFIG.basePricingUrl}?country=${country_name}&lastPlan=${pricing_data.lastPlan}&currentPlan=`;
-        basic_link = pricing_link + "basic";
-        advance_link = pricing_link + "advance";
-    } else {
-        pricing_link = 'https://buy.stripe.com/';
-        basic_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].basic;
-        advance_link = pricing_link + PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()].advance;
-    }
-
-    let multAccountButtonHtml = await multipleAccountButton();
-    let basicButtonHtml = await basicButton(basic_link, basicPrice, basicConvertedPrice,false);
-    let advanceButtonHtml = await advanceButton(advance_link, advancePrice, advanceConvertedPrice, popup_name,false);
-    let showBasicButton = true, showAdvanceButton = false;
-    let showMultAccountButton = false;
-
-    if(last_plan_type == 'Advance') {
-        showBasicButton = false;
-        showAdvanceButton = true;
-    }
-
-    let popup_button_html = '';
-
-    if(popup_name == "free_trial_reminder" || popup_name == "free_trial_expired"){
-        popup_button_html = getFreeTrialButtonHtml();
-        showBasicButton = false;
-        showAdvanceButton = false;
-    }
-
-    if(popup_name == 'premium_expired' && last_plan_type == 'Basic'){
-        let buttons = await getBasicPremiumExpiredButton(basicPrice, basicConvertedPrice, advancePrice, advanceConvertedPrice, pricing_link);
-        basicButtonHtml = buttons.basicButtonHtml;
-        advanceButtonHtml = buttons.advanceButtonHtml;
-        showBasicButton = true;
-        showAdvanceButton = true;
-    }
-
-    if(popup_name == 'premium_expired' && last_plan_type == 'Advance'){
-        advanceButtonHtml = await getAdvancePremiumExpiredButton(advancePrice, advanceConvertedPrice, pricing_link);
-        showBasicButton = false;
-        showAdvanceButton = true;
-    }
-
-    if(popup_name == "buy_annual"){
-        popup_button_html = getAnnualButtonHtml();
-        showBasicButton = false;
-        showAdvanceButton = false;
-    }
-
-    if(popup_name == "advance_promo_expired"){
-        showAdvanceButton=true;
-        basicButtonHtml = await basicButton(basic_link, basicPrice, basicConvertedPrice,false);
-        advanceButtonHtml = await advanceButton(advance_link, advancePrice, advanceConvertedPrice, popup_name,false);
-    }
-
-    if(popup_name == 'annual_plan_reminder'){
-        const { renewButton, upgradeButton } = annualExpired(plan_type,annualAnnualPricingLink,annualBasicPricingLink);
-        if (plan_type === "Basic") {
-            showBasicButton = true;
-            showAdvanceButton = true;
-            basicButtonHtml = renewButton;
-            advanceButtonHtml = upgradeButton;
-        } else {
-            showBasicButton = false;
-            showAdvanceButton = true;
-            basicButtonHtml = "";
-            advanceButtonHtml = renewButton;
-        }
-    }
-
-    let pricing_buttons_html = `
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;align-items:center;justify-content:center;">
-        <div class="pricing-buttons-container ${popup_name === "annual_plan_reminder" && "annualExpiredBtns"}" style="margin-bottom:0px;"> 
-            ${showBasicButton ? basicButtonHtml : ""}
-            ${showAdvanceButton ? advanceButtonHtml : ""}
-            ${showMultAccountButton ? multAccountButtonHtml : ""}
-            ${popup_button_html}
-        </div>
-        <div style="width:100%;${popup_name == 'annual_plan_reminder'?"display:none;":"display:flex;"}justify-content:center;align-items:center;flex-direction:column;color:#fff;">
-            <span style="margin-bottom:5px">or</span>
-            ${RUNTIME_CONFIG.useOldPricingLinks 
-                ? `<a href="${RUNTIME_CONFIG.basePricingUrl}multiple-account" target="_blank" style="color:#fff;font-size:14px;text-decoration:underline;text-underline-offset:5px;display:flex;justify-content:center;align-items:center;gap:3px;font-weight: bold;"><img src="${multiple_users_icon}" style="width:18px;margin-top: 3px;"/>Buy multiple users upto 70% discount</a>` 
-                : `<span style="color:#fff;font-size:14px;text-decoration:underline;text-underline-offset:5px;display:flex;justify-content:center;align-items:center;gap:3px;font-weight: bold;cursor:pointer;" class="show_multiple_users"><img src="${multiple_users_icon}" style="width:18px;margin-top: 3px;"/>Buy multiple users upto 70% discount</span>`
-            }
-        </div>
-    </div>
-    `;
-    return pricing_buttons_html;
+    return '';
 }
 
 function create_features_list_html(popup_name) {
@@ -2602,427 +2326,21 @@ async function create_popup_html(popup_name, date_diff) {
     return popup_html;
 }
 
-function show_pricing_for_multiple_accounts() {
-    removeAppBackdrop();
-    closeAllPopups();
-
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        return;
-    }
-
-    let activePlan = 'advance';   // default
-    let activeDuration = 'annually'; // default
-    let numberOfAccounts = 2;     // default
-
-    const buildPopupHTML = (plan, duration, accounts) => {
-        const { finalPrice, slashPrice,currency,discountedPrice } = calculateMultipleAccountsPricing(plan, duration, accounts);
-
-        return `
-            <div class="header-multiple-accounts">
-                <div class="header-multiple-accounts-title">
-                    Need multiple accounts?
-                </div>
-                <div class="header-multiple-accounts-description">
-                    <p>Purchase premium plan for multiple users for your organization at a <span class="text-royal">discounted rate upto 70%</span>  </p>
-                </div>
-                <div class="pricing-popup-close">&times;</div>
-            </div>
-
-            <div class="body-multiple-accounts">
-                <div class="body-header">
-                    <div class="left_line"></div>
-                    <h3 class="pricing_calculator_title">Pricing Calculator</h3>
-                    <div class="right_line"></div>
-                </div>
-
-                <div class="body-content">
-                    <div class="plan-toggle">
-                        <input type="radio" id="multiple_account_basic" name="plan" value="basic" ${plan === 'basic' ? 'checked' : ''}>
-                        <label for="multiple_account_basic">Basic</label>
-                        <input type="radio" id="multiple_account_advance" name="plan" value="advance" ${plan === 'advance' ? 'checked' : ''}>
-                        <label for="multiple_account_advance">Advance</label>
-                        <span class="slider"></span>
-                    </div>
-
-                    <div class="pricing-slider pricing_calculator_slider">
-                        <div class="duration-slider">
-                            <span class="slider-text ${duration === 'monthly' ? 'text-royal' : 'text-gray'}">Monthly</span>
-                            <label class="switch-container multiple_account_popup_switch">
-                                <input type="checkbox" id="duration-toggle" ${duration === 'annually' ? 'checked' : ''}/>
-                                <span class="switch"></span>
-                            </label>
-                            <span class="slider-text ${duration === 'annually' ? 'text-royal' : 'text-gray'}">12 Months</span>
-                        </div>
-                    </div>
-
-                    <div class="num_accounts_section">
-                        <p class="num_accounts_title text-gray">Number of Accounts</p>
-                        <input class="num_accounts_input" type="number" min="2" value="${accounts}" />
-                    </div>
-                    <div class="pricing-popup-price">
-                        <span class="new-price"><span class="${currency === '₹' ? 'rupee' : ''} currency-symbol">${currency}</span>${duration === 'annually' ? Math.ceil(discountedPrice/accounts) : Math.ceil(finalPrice/accounts)}</span>
-                        <span class="old-price"><span class="${currency === '₹' ? 'rupee' : ''} currency-symbol">${currency}</span>${slashPrice}</span>
-                    </div>
-                    <span class="user-month">/user/month</span>
-
-                    <button class="multiple-accounts-buy background-royal">Buy</button>
-                </div>
-            </div>
-        `;
-    };
-
-    const popup = $('<div>', { class: 'pricing-popup multiple-accounts-popup pricing_card prime_content_popup', id: 'multiple-accounts-popup' });
-    popup.html(buildPopupHTML(activePlan, activeDuration, numberOfAccounts));
-    $('body').append(popup);
-    addAppBackdrop();
-
-    $('body').on('click', '.pricing-popup-close', function () {
-        $('#multiple-accounts-popup').remove();
-        removeAppBackdrop();
-    });
-    
-    $('body').one('click', '.multiple-accounts-buy', function () {
-        $('#multiple-accounts-popup').remove();
-        removeAppBackdrop();
-        show_multiple_accounts_popup(activePlan, activeDuration, numberOfAccounts)
-    });
-
-    $('body').on('change', 'input[name="plan"]', function () {
-        activePlan = $(this).val();
-        $('#multiple-accounts-popup').html(buildPopupHTML(activePlan, activeDuration, numberOfAccounts));
-    });
-
-    $('body').on('change', '#duration-toggle', function () {
-        activeDuration = this.checked ? 'annually' : 'monthly';
-        $('#multiple-accounts-popup').html(buildPopupHTML(activePlan, activeDuration, numberOfAccounts));
-    });
-
-    $('body').on('input', '.num_accounts_input', function () {
-        let val = parseInt($(this).val());
-        numberOfAccounts = (isNaN(val) || val < 2) ? 2 : val;
-        $('#multiple-accounts-popup').html(buildPopupHTML(activePlan, activeDuration, numberOfAccounts));
-    });    
+async function show_pricing_for_multiple_accounts() {
+    return;
 }
 
 
-async function show_multiple_accounts_popup(activePlan, activeDuration, numberOfAccounts, edit = false) {
-    removeAppBackdrop();
-    closeAllPopups();
-
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        return;
-    }
-
-    const durationMapTranslated = {
-        'monthly': await translate('Monthly'),
-        'annually': await translate('Annual')
-    };
-    const enterEmailText = await translate('Enter your email:');
-    const enterEmailPlaceholder = await translate('Enter your email...');
-    const enterNumbersText = await translate('Enter phone numbers');
-    const infoText = await translate('Add the WhatsApp numbers with the country code on which the premium needs to be enabled');
-    const enterNumbersPlaceholder = await translate('Enter phone number with country code, e.g. +919876543210');
-    const buyText = await translate('Buy');
-    const addMoreText = await translate('Add More');
-    const autoRenewText = await translate('Enable auto renew');
-    const subscribeText = await translate('Subscribe');
-
-    const buildPopupHTML = (activeDuration, activePlan) => {
-        return `
-            <div class="header-wrapper">
-                <div class="pricing-popup-header multiple-accounts-popup-header">
-                    <span>${activePlan.charAt(0).toUpperCase() + activePlan.slice(1)} ${durationMapTranslated[activeDuration]}</span>
-                    <div class="pricing-popup-close">&times;</div>
-                </div>
-            </div>
-            <div class="pricing-popup-body multiple-accounts-popup-body">
-                <div class="request-form">
-                    <div class="request-email">   
-                        <span>${enterEmailText}</span>
-                        <input type="email" id="request-email" placeholder="${enterEmailPlaceholder}" />
-                    </div>
-                    <div class="info">
-                        <span>${infoText}</span>
-                    </div>
-                    <div class="request-numbers">
-                        <span>${enterNumbersText}</span>
-                        <div id="numbers-list" class="numbers-list scrollable-list"></div>
-                        <button type="button" id="add-more-btn" class="add-more-btn">${addMoreText}</button>
-                    </div>
-                    ${activeDuration === 'monthly' ? `
-                        <div class="auto-renew-option">
-                            <label>
-                                <input type="checkbox" id="auto-renew-checkbox" />
-                                ${autoRenewText}
-                            </label>
-                        </div>
-                    ` : ''}
-                    <button class="buy-now-btn" id="send-request-btn">${buyText}</button>
-                </div>
-            </div>
-        `;
-    };
-
-    const popup = $('<div>', { class: 'pricing-popup multiple-accounts-popup prime_content_popup ', id: 'multiple-account-popup' });
-    popup.html(buildPopupHTML(activeDuration, activePlan));
-    $('body').append(popup);
-    addAppBackdrop();
-
-    let numbersArray = [];
-
-    function saveState() {
-        const email = $('#request-email').val().trim();
-        const autoRenew = $('#auto-renew-checkbox').is(':checked');
-        const state = { email, numbers: numbersArray, autoRenew };
-        chrome.storage.local.set({ multipleAccountsData: state });
-    }
-
-    function restoreState(state) {
-        if (!state) return;
-
-        if (state.email) {
-            $('#request-email').val(state.email);
-        }
-
-        $('#numbers-list').empty();
-        numbersArray = [];
-
-        if (state.numbers && state.numbers.length > 0) {
-            state.numbers.forEach(num => addNumberField(num));
-        } else {
-            for (let i = 0; i < numberOfAccounts; i++) {
-                addNumberField("");
-            }
-        }
-
-        if (state.autoRenew) {
-            $('#auto-renew-checkbox').prop('checked', true).trigger('change');
-        }
-    }
-
-    function addNumberField(value) {
-        const index = numbersArray.length;
-        numbersArray.push(value);
-        
-        $('#numbers-list').append(`
-            <div class="number-item" data-index="${index}">
-                <input type="text" class="number-input" data-index="${index}"
-                    placeholder="${enterNumbersPlaceholder}" ${value ? `value="${value}"` : ''} />
-                <button class="remove-number" data-index="${index}">&times;</button>
-            </div>
-        `);
-    }
-    
-    function syncNumbersArray() {
-        numbersArray = [];
-        $('.number-input').each(function () {
-            numbersArray.push($(this).val().trim());
-        });
-        saveState();
-    }
-    
-    if (edit) {
-        chrome.storage.local.get(['multipleAccountsData'], (result) => {
-            restoreState(result.multipleAccountsData);
-        });
-    } else {
-        for (let i = 0; i < numberOfAccounts; i++) {
-            addNumberField("");
-        }
-    }
-
-    $('body').off('click', '#add-more-btn').on('click', '#add-more-btn', function () {
-        addNumberField("");
-        saveState();
-    });
-
-    $('body').off('input', '.number-input').on('input', '.number-input', function () {
-        syncNumbersArray();
-    });
-    
-    $('body').off('click', '.remove-number').on('click', '.remove-number', function () {
-        const activeCount = $('.number-item').length;
-        if (activeCount <= 2) {
-            alert("At least 2 numbers are required.");
-            return;
-        }
-        $(this).closest('.number-item').remove();
-        syncNumbersArray();
-    });
-
-    $('body').off('input', '#request-email').on('input', '#request-email', function () {
-        saveState();
-    });
-
-    $('body').off('change', '#auto-renew-checkbox').on('change', '#auto-renew-checkbox', function () {
-        if ($(this).is(':checked')) {
-            $('#send-request-btn').text(subscribeText);
-        } else {
-            $('#send-request-btn').text(buyText);
-        }
-        saveState();
-    });
-
-    $('body').off('click', '.pricing-popup-close').on('click', '.pricing-popup-close', function () {
-        $('#multiple-account-popup').remove();
-        removeAppBackdrop();
-    });
-
-    $('body').off('click', '#send-request-btn').on('click', '#send-request-btn', function () {
-        const email = $('#request-email').val().trim();
-        const numbers = numbersArray.filter(num => num && num !== "");
-        const autoRenew = $('#auto-renew-checkbox').is(':checked');
-        
-        if (!email || numbers.length === 0) {
-            alert('Please fill in all fields.');
-            return;
-        }
-
-        const state = { email, numbers, autoRenew };
-        chrome.storage.local.set({ multipleAccountsData: state }, () => {
-            finalPopupForMultipleAccounts(email, numbers, activePlan, activeDuration, autoRenew);
-        });
-
-        $('#numbers-list').empty();
-        numbersArray = [];
-        $('#multiple-account-popup').remove();
-        removeAppBackdrop();
-    });
+async function show_multiple_accounts_popup() {
+    return;
 }
 
-function sendRequestForMultipleAccounts(email, numbers, planType, duration, autoRenew) {
-    const url = "https://3hfe043k3g.execute-api.ap-south-1.amazonaws.com/prod";
-    const data = {
-        email: email,
-        numbers: numbers,
-        plan_type: planType.charAt(0).toUpperCase() + planType.slice(1),
-        plan_duration: duration,
-        operation: "add-transaction-record",
-        name: "Prime Sender " + planType.charAt(0).toUpperCase() + planType.slice(1) + " " + (duration === 'monthly' ? 'Monthly' : 'Annual'),
-        description: planType.charAt(0).toUpperCase() + planType.slice(1) + " " + (duration === 'monthly' ? 'Monthly' : 'Annual') + " Plan for " + numbers.length + " users",
-        country: "india",
-        currency: "inr",
-        autorenew: autoRenew
-    };
-    
-    fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(data => {
-        let res = JSON.parse(data.body);
-        console.log("Response:", res);
-        if(res.statusCode === 200){
-            window.open(`${res.data.stripe_checkout_url}`,"_blank")
-            $('#final-multiple-account-popup').remove();
-            removeAppBackdrop();
-        }
-    })
-    .catch(error => {
-        console.error(error);
-    });
+function sendRequestForMultipleAccounts() {
+    return;
 }
 
-async function finalPopupForMultipleAccounts(email, numbers, planType, duration, autoRenew) {
-    removeAppBackdrop();
-    closeAllPopups();
-
-    const durationMapTranslated = {
-        'monthly': await translate('Monthly'),
-        'annually': await translate('Annual')
-    };
-
-    const translatedLoader = await translate('Please wait, while we are processing your request ...')
-    const translatedHeading = await translate('Please confirm your details')
-    const translatedEmail = await translate('Email:')
-    const translatedPhoneNumbers = await translate('Phone Numbers:')
-    const translatedConfirmBtn = await translate('Confirm & Buy')
-    const translatedEditBtn = await translate('Edit')
-
-    const popupHTML = `
-        <div class="header-wrapper">
-            <div class="pricing-popup-header multiple-accounts-popup-header">
-                <span>${planType.charAt(0).toUpperCase() + planType.slice(1)} ${durationMapTranslated[duration]}</span>
-                <div class="pricing-popup-close">&times;</div>
-            </div>
-        </div>
-        <div class="pricing-popup-body multiple-accounts-popup-body">
-            <div class="confirmation-wrapper">
-                <h3>${translatedHeading}</h3>
-                
-                <div class="confirm-item">
-                    <strong>${translatedEmail}</strong> <span>${email}</span>
-                </div>
-                <div class="confirm-item">
-                    <strong>${translatedPhoneNumbers}</strong> <span>${numbers.join(", ")}</span>
-                </div>
-            </div>
-            <div class="confirmation-actions">
-                <button class="confirm-btn" id="confirm-buy-btn">${translatedConfirmBtn}</button>
-                <button class="edit-btn" id="edit-details-btn">${translatedEditBtn}</button>
-            </div>
-        </div>
-    `;
-
-    const popup = $('<div>', { 
-        class: 'pricing-popup multiple-accounts-popup prime_content_popup', 
-        id: 'final-multiple-account-popup' 
-    });
-    popup.html(popupHTML);
-    $('body').append(popup);
-    addAppBackdrop();
-
-    $('body').off('click', '.pricing-popup-close').on('click', '.pricing-popup-close', function () {
-        $('#final-multiple-account-popup').remove();
-        removeAppBackdrop();
-    });
-
-    $('body').off('click', '#edit-details-btn').on('click', '#edit-details-btn', function () {
-        $('#final-multiple-account-popup').remove();
-        removeAppBackdrop();
-        show_multiple_accounts_popup(planType, duration, numbers.length, true);
-    });
-
-    $('body').off('click', '#confirm-buy-btn').on('click', '#confirm-buy-btn', function () {
-        $('.confirmation-wrapper').html(`
-            <div class="loader">
-                <p>${translatedLoader}</p>
-                <div class="spinner">
-                    <svg width="64" height="64" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <style>
-                        .spinner_jCIR {
-                            animation: spinner_B8Vq .9s linear infinite;
-                            animation-delay: -.9s;
-                            fill: #009a88;
-                        }
-                        .spinner_upm8 { animation-delay: -.8s; }
-                        .spinner_2eL5 { animation-delay: -.7s; }
-                        .spinner_Rp9l { animation-delay: -.6s; }
-                        .spinner_dy3W { animation-delay: -.5s; }
-
-                        @keyframes spinner_B8Vq {
-                            0%, 66.66% { animation-timing-function: cubic-bezier(0.36,.61,.3,.98); y:6px; height:12px; }
-                            33.33% { animation-timing-function: cubic-bezier(0.36,.61,.3,.98); y:1px; height:22px; }
-                        }
-                        </style>
-
-                        <rect class="spinner_jCIR" x="1" y="6" width="2.8" height="12"/>
-                        <rect class="spinner_jCIR spinner_upm8" x="5.8" y="6" width="2.8" height="12"/>
-                        <rect class="spinner_jCIR spinner_2eL5" x="10.6" y="6" width="2.8" height="12"/>
-                        <rect class="spinner_jCIR spinner_Rp9l" x="15.4" y="6" width="2.8" height="12"/>
-                        <rect class="spinner_jCIR spinner_dy3W" x="20.2" y="6" width="2.8" height="12"/>
-                    </svg>
-                </div>
-            </div>
-        `);
-        $('.confirmation-actions').remove();
-
-        sendRequestForMultipleAccounts(email, numbers, planType, duration, autoRenew);
-    });
+async function finalPopupForMultipleAccounts() {
+    return;
 }
 
 function calculateMultipleAccountsPricing(planType, duration,numberOfAccounts) {
@@ -3062,408 +2380,13 @@ function calculateMultipleAccountsPricing(planType, duration,numberOfAccounts) {
 
 }
 
-async function show_plan_pricing_popup(activePlan = 'basic') {
-    const pricing_popup_trial_features = ['Export Group Contacts', "Translate Conversation", "Quick Replies", "Customizable Time Gap", "Random Time Gap", 'Chat Support', "Batching", "Caption", "Save Message Template", "Detailed Delivery report", "Stop Campaign", "Group Message"];
-    const pricing_popup_premium_features = ["Schedule", 'Business Chat Link', 'Meet/Zoom Support', "Multiple Attachments", "Pause Campaign", "Export Unsaved Contacts"]
-    removeAppBackdrop();
-    closeAllPopups();
-    
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        return;
-    }
-
-    const country_name = getCountryNameWithSpecificPricing();
-    const pricingData = PRICING[country_name];
-    const linkData = PRICING_PAGE_LINK[country_name];
-    const currencySymbol = pricingData.currency_symbol || '';
-    let activeDuration = 'annually'; 
-
-    // Translation
-    const subscribeText = await translate('Subscribe');
-    const buyText = await translate('Buy');
-    const monthlyText = await translate('Monthly');
-    const annuallyText = await translate('Annually');
-
-    const buildPopupHTML = (plan, duration) => {
-        const planData = pricingData[duration][`${plan}_plan`];
-        const stripeCode = linkData[duration][plan];
-        const isMonthlyDuration = duration === 'monthly';
-        const finalPrice = isMonthlyDuration ? planData.final : planData.monthly_final;
-        const oldPrice = isMonthlyDuration ? planData.original : planData.monthly_original;
-
-        return `
-                <div class="pricing-popup-header">
-                    <div class="pricing-popup-close">&times;</div>
-                    <div class='pricing-popup-logo'>
-                        <img src=${logo_img} style="width:100%" alt="logo" />
-                        <img src=${logo_text} style="width:100%" alt="logo" />
-                    </div>
-                    <h1> <b><span>${plan}</span> Plan</b></h1>
-                </div>
-                <hr />
-            <div class="pricing-popup-body multiple-accounts-popup-body">
-
-         <div class="pricing-slider pricing_calculator_slider">
-                        <div class="duration-slider">
-                            <div class="slider_leftSide">
-                                <span class="slider-text">Monthly
-                                </span>
-                                <span class="new-price"><span class="${currencySymbol === '₹' ? 'rupee' : ''} currency-symbol">${currencySymbol}</span>${pricingData['monthly'][`${plan}_plan`].final}</span>
-                                <span class="user-month">/user/month</span>
-                            </div>
-                            <label class="switch-container plan_pricing_poup_switch">
-                            <input type="checkbox" id="duration-toggle" ${duration === 'annually' ? 'checked' : ''}/>
-                            <span class="switch"></span>
-                            </label>
-                            <div class="slider_rightSide">
-                                <span class="slider-text">Annual
-                                </span>
-                                <span class="new-price"><span class="${currencySymbol === '₹' ? 'rupee' : ''} currency-symbol">${currencySymbol}</span>${pricingData['annually'][`${plan}_plan`].monthly_final}</span>
-                                <span class="user-month">/user/month billed annually</span>
-                            </div>
-                        </div>
-                </div>
-
-
-                <div class="pricing-popup-btn">
-                    <button>
-                        <a id="buy-now-btn" href="https://buy.stripe.com/${stripeCode}" target="_blank" class="buy-now-btn">
-                            ${duration === 'monthly' ? subscribeText : buyText}
-                        </a>
-                    </button>
-                    <span class="font20 marginTop10" style="color:#000; margin: 0px">or</span>
-                    <div id="expired-multiple-accounts-btn" class="multiple-accounts-btn" style="cursor:pointer"><img src="${mult_user}"/><span>Buy Multiple Accounts upto 70% discount</span></div>
-                </div>
-
-
-            </div>
-            <div class="pricing-popup-bottom">
-                <div class="pricing-popup-features">
-                ${pricing_popup_premium_features.map((item, index) => `
-                    <div class="feature-item" key="${index}">
-                    <img 
-                        class="${activePlan === "basic" ? "circle_cross" : "check"}_icon" 
-                    />
-                    ${item} <span class="text-bold">&nbsp;(Advance)</span>
-                    </div>
-                `).join('')}
-                ${pricing_popup_trial_features.map((item, index) => `
-                    <div class="feature-item" key="${index}">
-                    <img 
-                        class="check_icon"
-                    />
-                    ${item}
-                    </div>
-                `).join('')}
-                </div>
-                <div class="pricing-popup-footer">
-                    <div class="pricing-popup-footer-icon"><span>i</span></div>
-                    <div class="pricing-popup-footer-content" 
-                        style="font-size: ${duration === 'monthly' && last_plan_type === 'freeTrial' ? '11px' : '12px'}">
-                    <span class="footer-instruction">
-                        ${duration === 'monthly' && last_plan_type === 'freeTrial' ? "Discount applicable for the first month" : ''}
-                    </span>
-                    ${
-                        duration === 'monthly'
-                        ? "By subscribing, you agree to auto-deductions every month according to your plan type which will extend your plan type by a month. By purchasing the premium plan, you agree to our <u>Terms of Service</u> and <u>Privacy Policy.</u>"
-                        : "By purchasing the premium plan, you agree to our <u>Terms of Service</u> and <u>Privacy Policy</u>."
-                    }
-                    </div>
-                </div>
-            </div>
-        `;
-    };
-
-    const popup = $('<div>', { 
-        class: 'pricing-popup expired_popup prime_content_popup', 
-        id: 'plan-pricing-popup',
-    });
-        
-    popup.html(buildPopupHTML(activePlan, activeDuration));
-    addAppBackdrop();
-    $('body').append(popup);
-    if(last_plan_type === 'Expired') {
-        $(".expired_popup").addClass("expiredBg");
-    }
-    else{
-        $(".expired_popup").removeClass("expiredBg");}
-
-    // Close popup
-    $('body').on('click', '.pricing-popup-close', function () {
-        $('#plan-pricing-popup').remove();
-        removeAppBackdrop();
-    });
-
-    $('body').on('click', '#expired-multiple-accounts-btn', function () {
-        $('#plan-pricing-popup').remove();
-        removeAppBackdrop();
-        show_pricing_for_multiple_accounts();
-    });
-
-    $('body').on('change', '#duration-toggle', function () {
-        activeDuration = this.checked ? 'annually' : 'monthly';
-        $('#plan-pricing-popup').html(buildPopupHTML(activePlan, activeDuration));
-        if(this.checked){      
-            $(".expired_popup .slider_leftSide").removeClass("active")
-            $(".expired_popup .slider_rightSide").removeClass("inactive")
-        }
-        else{
-            $(".expired_popup .slider_leftSide").addClass("active")
-            $(".expired_popup .slider_rightSide").addClass("inactive")
-        }    
-    });
+async function show_plan_pricing_popup() {
+    return;
 }
 
 
 async function show_pricing_popup() {
-    removeAppBackdrop();
-    closeAllPopups();
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        return;
-    }
-
-    const country_name = getCountryNameWithSpecificPricing();
-    const pricingData = PRICING[country_name];
-    const linkData = PRICING_PAGE_LINK[country_name];
-    const currencySymbol = pricingData.currency_symbol || '';
-
-    const durationMap = {
-        'Monthly': 'monthly',
-        '12 Months': 'annually',
-        '24 Months': 'biannually'
-    };
-
-    const basicFeatures = [
-        "All Free Features",'Translate Conversation',
-        'Blur Conversations', 'No minimum time gap', 'Batching',
-        'Quick Replies', 'Group Contacts Export', 'Stop Campaign'
-    ];
-
-    const advanceFeatures = [
-        'All Basic Features', 'Multiple Attachments', 'Schedule',
-        'Pause Campaign', 'Business Chat Link', 'Export Unsaved Contacts'
-    ];
-
-    // Translation
-    const subscribeText = await translate('Subscribe');
-    const buyText = await translate('Buy');
-    const durationMapTranslated = {
-        'Monthly': await translate('Monthly'),
-        '12 Months': await translate('12 Months'),
-        '24 Months': await translate('24 Months')
-    };
-
-
-    const createPlanHTML = (planName, planKey, durationKey) => {
-        const plan = pricingData[durationMap[durationKey]][`${planKey}_plan`];
-        const stripeCode = linkData[durationMap[durationKey]][planKey];
-        const isMonthlyDuration = durationKey === 'Monthly';
-        const finalPrice = isMonthlyDuration ? plan.final : plan.monthly_final;
-        const oldPrice = isMonthlyDuration ? plan.original : plan.monthly_original;        
-        const features = planKey === 'basic'
-            ? basicFeatures
-            : advanceFeatures;
-
-        return `
-            <div class="pricing-popup-${planKey}">
-                <div class="pricing-popup-title">
-                    <img src="${planKey === 'basic' ? upgradePlanBasic : upgradePlan}" alt="Logo"/>
-                    <span>${planName}</span>
-                </div>
-                <div class="pricing-popup-price">
-                    <span class="new-price"><span class="${currencySymbol === '₹' ? 'rupee' : ''} currency-symbol">${currencySymbol}</span>${finalPrice}</span>
-                    <span class="old-price"><span class="${currencySymbol === '₹' ? 'rupee' : ''} currency-symbol">${currencySymbol}</span>${oldPrice}</span>
-                </div>
-                <span class="user-month" style="font-size:10px;color:#000">/user/month ${durationKey === "12 Months" ? "billed annually" : durationKey === "24 Months" ? "billed biannually" : ""}</span>
-                <div class="pricing-popup-btn">
-                    <a class="pricing-popup-btn-${planKey}" href="https://buy.stripe.com/${stripeCode}" target="_blank">
-                        ${durationMap[durationKey] === 'monthly' 
-                            ? `${subscribeText}` 
-                            : `${buyText} ${planName}`
-                        }
-                    </a>
-                </div>
-                <div class="pricing-popup-features">
-                    <ul>
-                        ${features.map(f => 
-                          `<div style="display: flex;justify-content: space-between;align-items: center;">
-                            <li style="display: flex;align-items: center; justify-content:center; ${f === "All Basic Features" || f === "All Free Features" ? "font-weight: bold;" : ""}">
-                              ${f} ${f === "All Basic Features" ? "" : `<div class="i-svg" id="${f}" style="display: flex;align-items: center;justify-content: center; margin-left:2px"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="feature_info_class" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M235.4 172.2c0-11.4 9.3-19.9 20.5-19.9 11.4 0 20.7 8.5 20.7 19.9s-9.3 20-20.7 20c-11.2 0-20.5-8.6-20.5-20zm1.4 35.7H275V352h-38.2V207.9z"></path><path d="M256 76c48.1 0 93.3 18.7 127.3 52.7S436 207.9 436 256s-18.7 93.3-52.7 127.3S304.1 436 256 436c-48.1 0-93.3-18.7-127.3-52.7S76 304.1 76 256s18.7-93.3 52.7-127.3S207.9 76 256 76m0-28C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48z"></path></svg></div>`}
-                            </li>
-                          </div>`).join('')
-                        }
-                    </ul> 
-                </div>
-            </div>
-        `;
-    };
-
-
-    const buildPopupHTML = (activeDuration) => {
-        return `
-            <div class="pricing_country_text">
-                <p class="heading">
-                    Pricing curated just for you
-                    ${(location_info) ? `
-                            <span class="country_block" style="display: flex; align-items: center; justify-content: center;">
-                                <img 
-                                    src="https://flagcdn.com/160x120/${location_info.name_code.toLowerCase()}.webp" 
-                                    alt="flag"
-                                    crossorigin="anonymous"
-                                />
-                                <span class="country_name">${location_info.name}</span>!
-                            </span>` : `<span>!</span>`
-                    }
-                </p>
-            </div>
-            <div class="header-wrapper">
-                <div class="pricing-popup-header">
-                    ${Object.keys(durationMap).map(duration => `
-                        <div class="pricing-popup-duration ${duration === activeDuration ? 'active' : ''}" data-duration="${duration}">
-                            <span>${durationMapTranslated[duration]}</span>
-                        </div>
-                    `).join('')}
-                    <div class="pricing-popup-close">&times;</div>
-                </div>
-            </div>
-            <div class="pricing-popup-body">
-                ${createPlanHTML('Basic', 'basic', activeDuration)}
-                ${createPlanHTML('Advance', 'advance', activeDuration)}
-            </div>
-            <div class="footer-note">
-                <p>By subscribing, you agree to auto-deductions every month according to your plan type which will extend your plan type by a month.</p>
-                <span>By purchasing the premium plan, you agree to our Terms and Service and Privacy Policy.</span>
-            </div>
-        `;
-    };
-
-    const pricing_popup = $('<div>', { class: 'pricing-popup prime_content_popup', id: 'pricing-popup' });
-    pricing_popup.html(buildPopupHTML('12 Months'));
-    $('body').append(pricing_popup);
-    addAppBackdrop();
-
-    // Change duration
-    $('body').on('click', '.pricing-popup-duration', function () {
-        const selectedDuration = $(this).data('duration');
-        $('.pricing-popup').html(buildPopupHTML(selectedDuration));
-    });
-
-    // Close popup
-    $('body').on('click', '.pricing-popup-close', function () {
-        $('#pricing-popup').remove();
-        removeAppBackdrop();
-    });
-
-    const featuresDescription = {
-                UnlimitedMessaging: {
-                    description: 'Broadcast to multiple chats at once, effortlessly scaling your communication. No need for template approvals and extra fees.'
-                },
-                AllFreeFeatures: {
-                    description: 'Unlimited Broadcasting, Attachment, Message Customization, Chat Support, Save Message Template, Detailed Delivery Report'
-                },
-                SendAttachments: {
-                    description: 'You can attach and send images, documents, videos, etc. along with your message to users'
-                },
-                MessageCustomization: {
-                    description: 'You can customize your message according to the customer with their name, email, order number, etc'
-                },
-                ChatSupport: {
-                    description: 'You can click on \'Chat Support\' on the extension to get your queries resolved.'
-                },
-                Caption: {
-                    description: 'Add a caption to your attachments'
-                },
-                SaveCampaignDetails: {
-                    description: 'Get a detailed report of your campaigns to improve sales and utilize Prime Sender to the fullest'
-                },
-                SaveMessageTemplate: {
-                    description: 'Use saved message template in a single click'
-                },
-                DetailedDeliveryReport: {
-                    description: 'Get a detailed report of your campaigns to improve sales and utilize Prime Sender to the fullest'
-                },
-                TranslateConversation: {
-                    description: 'Now you can translate your messages to any language with just a single click'
-                },
-                BlurConversations: {
-                    description: 'Blur conversations to protect sensitive information.'
-                },
-                PrioritySupport: {
-                    description: 'We provide priority support to our premium customers, to help them with their queries'
-                },
-                Nominimumtimegap: {
-                    description: 'Save time and quickly send messages by reducing the time gap between messages.'
-                },
-                RandomTimeGap: {
-                    description: 'Randomise the time gap between messages'
-                },
-                Batching: {
-                    description: 'Send your messages in batches and add a time interval between the batches'
-                },
-                StopCampaign: {
-                    description: 'Ability to stop messaging mid-campaign'
-                },
-                GroupContactsExport: {
-                    description: 'Download unsaved contacts from groups'
-                },
-                QuickReplies: {
-                    description: 'You can respond to your customers quickly, with pre-saved responses'
-                },
-                PauseCampaign: {
-                    description: 'Ability to resume messaging mid-campaign'
-                },
-                MultipleAttachments: {
-                    description: 'You can attach and send multiple images, documents, videos, etc. along with your message to users at once'
-                },
-                Schedule: {
-                    description: 'You can schedule at what time to send your messages to users and your messages would be sent automatically at the set time'
-                },
-                BusinessChatLink: {
-                    description: 'Generate a link to your WhatsApp number\'s chat and let customers directly connect with you'
-                },
-                ExportUnsavedChatContacts: {
-                    description: 'Download unsaved chat contacts'
-                },
-                MeetZoomSupport: {
-                    description: 'Support for meet and zoom integration'
-                },
-                ExportUnsavedContacts: {
-                    description: 'Export unsaved contacts from chats'
-                },
-                GroupMessage: {
-                    description: 'Send messages to groups'
-                },
-                CustomizableTimeGap: {
-                    description: 'Customize the time gap between messages'
-                }
-        }     
-    function createTooltip(targetEl, text) {
-        const tip = document.createElement('div');
-        tip.className = 'feature-tooltip';
-        tip.textContent = text;
-
-        targetEl.appendChild(tip);
-        return tip;
-    }
-
-    setInterval(() => {
-        document.querySelectorAll('.i-svg').forEach(div => {
-            div.addEventListener('mouseenter', () => {
-                const key = div.id.replace(/\s+/g, '');
-                const feature = featuresDescription[key];
-                // Remove any existing tooltip first (defensive)
-                if (div._tooltipEl && div._tooltipEl.remove) div._tooltipEl.remove();
-                div._tooltipEl = createTooltip(div, feature.description);
-            });
-            div.addEventListener('mouseleave', () => {
-                // clear on hover out (optional)
-                if (div._tooltipEl && div._tooltipEl.remove) {
-                    div._tooltipEl.remove();
-                    div._tooltipEl = null;
-                }
-            });
-        });
-    }, 100);
+    return;
 }
 
 function show_loader_and_close_popup(popup_name, delay, next_popup = false) {
@@ -3564,11 +2487,11 @@ async function success_popup(success_popup_name) {
 document.addEventListener('click', (event) => {
     if(document.querySelector('.trial_popup')) {
         let popup = document.querySelectorAll('.trial_popup')[0];
-        const isBuyAnnualPopup= popup.classList.contains('buy_annual_popup');
+        const isAnnualPromoPopup= popup.classList.contains('buy_annual_popup');
         if(!popup.contains(event.target)) {
             document.body.removeChild(popup);
             removeAppBackdrop()
-            if(isBuyAnnualPopup){
+            if(isAnnualPromoPopup){
                 chrome.storage.local.set({'lastShownAnnualPopup': formatToIsoDate(new Date())});
             }
         }
@@ -3624,63 +2547,12 @@ document.addEventListener("keydown", function (event) {
 });
 
 async function multipleAccountButton() {
-    let country_name = getCountryNameWithSpecificPricing();
-
-    if (RUNTIME_CONFIG.useOldPricingLinks){
-        return `<a href="${RUNTIME_CONFIG.basePricingUrl}multiple-account" target="_blank" class="popup-btn pricing-purple-btn CtaBtn">
-        <span style="white-space:nowrap;">Buy multiple users<br/></span>
-        <span style="white-space:nowrap; color: #fff; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;"><span style="margin-right:3px;">@</span>
-            ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-            <span class="price_class">${MULT25ACCOUNTPRICE[country_name]}</span>/month
-        </span>
-        ${(country_name === 'international' && location_info?.currency != 'USD') ?
-            `<span style="white-space:nowrap; color: #fff; font-size: 12px; line-height: 16px;font-weight:bold;"> 
-        (~<span class="price_class">${await convertPriceToLocale(MULT25ACCOUNTPRICE[country_name].substring(1))}</span>/month)
-        </span>` : ''
-        }
-    </a>`;
-    } else {
-        return `<span class="show_multiple_users" style="white-space:nowrap;">Buy multiple users<br/></span>
-        <span style="white-space:nowrap; color: #fff; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;"><span style="margin-right:3px;">@</span>
-            ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-            <span class="price_class">${MULT25ACCOUNTPRICE[country_name]}</span>/month
-        </span>
-        ${(country_name === 'international' && location_info?.currency != 'USD') ?     
-            `<span style="white-space:nowrap; color: #fff; font-size: 12px; line-height: 16px;font-weight:bold;"> 
-        (~<span class="price_class">${await convertPriceToLocale(MULT25ACCOUNTPRICE[country_name].substring(1))}</span>/month)
-        </span>` : ''
-        }`;
-    }
+    return '';
 }
 
 // for basic button always take the user to the pricing page
-async function basicButton(pricing_link = "", basicPrice = "", basicConvertedPrice = "", showPrice = true, convertToSpan = false) {
-    let country_name = getCountryNameWithSpecificPricing();
-    let converted_price = basicConvertedPrice;
-    if (!basicConvertedPrice || basicConvertedPrice === "") {
-        converted_price = await convertPriceToLocale(basicPrice.substring(1));
-    }
-
-    // Tag & attributes based on convertToSpan
-    const tag = convertToSpan ? 'span' : 'a';
-    const extraAttrs = convertToSpan 
-        ? `class="popup-btn pricing-white-btn CtaBtn show-basic-popup" style="font-weight:bold;"`
-        : `href="${pricing_link}" target="_blank" class="popup-btn pricing-white-btn CtaBtn" style="font-weight:bold;" buttonType="basic"`;
-
-    return `<${tag} ${extraAttrs}>
-        Buy Basic
-        ${showPrice ? `<br/>
-            <span style="white-space:nowrap; color: #009a88; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;">
-                <span style="margin-right:3px;">@</span> 
-                ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-                <span class="price_class">${basicPrice}</span>/month
-            </span>
-            ${(country_name === 'international' && location_info?.currency != 'USD') ?
-                `<span style="white-space:nowrap; color: #009a88; font-size: 12px; line-height: 16px;font-weight:bold;">
-                    (~<span class="price_class">${converted_price}</span>/month)
-                </span>` : ''
-            }` : ""}
-    </${tag}>`;
+async function basicButton() {
+    return '';
 }
 
 // for advance button
@@ -3712,125 +2584,16 @@ function annualExpired(plan_type,annualAnnualPricingLink,annualBasicPricingLink)
 }
 
 
-async function advanceButton(pricing_link = "", advancePrice = "", advanceConvertedPrice = "", popup_name, showPrice = true, convertToSpan = false) {
-    let country_name = getCountryNameWithSpecificPricing();
-    let converted_price = advanceConvertedPrice;
-    if (!advanceConvertedPrice || advanceConvertedPrice === "") {
-        converted_price = await convertPriceToLocale(advancePrice.substring(1));
-    }
-
-    if (popup_name == 'free_trial_start' || popup_name == 'free_trial_reminder' || popup_name == 'free_trial_expired' || popup_name == 'advance_promo_activated' || popup_name == 'advance_promo_reminder') {
-        btn = getFreeTrialButtonHtml();
-        return btn;
-    }
-
-    // Tag & attributes based on convertToSpan
-    const tag = convertToSpan ? 'span' : 'a';
-    const extraAttrs = convertToSpan
-        ? `class="popup-btn pricing-green-btn CtaBtn show-advance-popup" style="font-weight:bold;"`
-        : `href="${pricing_link}" target="_blank" class="popup-btn pricing-green-btn CtaBtn" style="font-weight:bold;" buttonType="advance"`;
-
-    return `<${tag} ${extraAttrs}>
-        Buy Advance
-        ${showPrice ? `<br/>
-            <span style="white-space:nowrap; font-size: 14px; line-height: 16px;font-weight:bold;display:flex;">
-                <span style="margin-right:3px;">@</span>
-                ${country_name === 'india' ? '<span class="rupee">₹</span>' : ''}
-                <span class="price_class">${advancePrice}</span>/month
-            </span>
-            ${(country_name === 'international' && location_info?.currency != 'USD') ?
-                `<span style="white-space:nowrap; color: #009a88; font-size: 12px; line-height: 16px;font-weight:bold;"> 
-                    (~<span class="price_class">${converted_price}</span>/month)
-                </span>` : ''
-            }` : ""}
-    </${tag}>`;
+async function advanceButton() {
+    return '';
 }
 
-function getPremiumReminderButton(req_plan_type){
-    let country_name = getCountryNameWithSpecificPricing();
-    let pricing_link;
-    if (RUNTIME_CONFIG.useOldPricingLinks) {
-        pricing_link = `${RUNTIME_CONFIG.basePricingUrl}?country=${country_name}&lastPlan=${last_plan_type}&currentPlan=`;
-    } else {
-        pricing_link = 'https://buy.stripe.com/';
-    }
-
-    let code = PRICING_PAGE_LINK[country_name][plan_duration.toLowerCase()];
-    if(last_plan_type == 'FreeTrial' && req_plan_type == 'Basic'){
-        if (RUNTIME_CONFIG.useOldPricingLinks) {
-            pricing_link = RUNTIME_CONFIG.basePricingUrl;
-        } else {
-            show_pricing_popup();
-        }
-    } else if(req_plan_type == 'Advance'){
-        pricing_link += RUNTIME_CONFIG.useOldPricingLinks ? "advance" : code.advance;
-    } else {
-        pricing_link += RUNTIME_CONFIG.useOldPricingLinks ? "basic" : code.basic;
-    }
-    return `<a href="${pricing_link}" target="_blank" class="popup-btn pricing-green-btn CtaBtn" buttonType="${req_plan_type.toLowerCase()}">
-            Buy ${req_plan_type}
-        </a>`;
+function getPremiumReminderButton() {
+    return '<div class="free-plan-message">All Prime Sender features are already unlocked.</div>';
 }
 
 async function premium_reminder(feature, req_plan_type, title = '') {
-    closeAllPopups();
-    
-    if(!feature) feature = 'default';
-
-    let body = document.querySelector('body');
-    let popup = document.createElement('div');
-    let modal_content = document.createElement('div');
-
-    let popup_button = getPremiumReminderButton(req_plan_type);
-    let reminder_title;
-    if((plan_type == 'Expired' && last_plan_type == 'AdvancePromo')|| (plan_type == 'Expired' && last_plan_type == 'FreeTrial')){
-        reminder_title = "Your Free trial for PREMIUM features has expired!";
-    }
-    else{
-        reminder_title = title ? title : PREMIUM_REMINDER[feature].title
-    }
-    let reminder_description = `Please buy <<${req_plan_type} Plan>> ${PREMIUM_REMINDER[feature].description}`;
-
-
-    popup.className = 'premium_reminder_popup trial_popup prime_content_popup';
-
-    modal_content.className = 'premium_reminder_content trial_content';
-    modal_content.innerHTML = `
-        <span id="close_premium_reminder_popup">
-            <img class="CtaCloseBtn premiumFeatureCloseBtn" src="${close_img_src}" alt="x">
-        </span>
-        <div class="premium_reminder_popup_title">
-            <span class="oops_icon"></span>Oops!
-        </div>
-        <div class="reminder_title">
-            ${await translate(reminder_title)}
-        </div>
-        <div class="reminder_description">
-            ${await translate(reminder_description)}
-        </div>
-        <div style="display:flex;justify-content:center;gap:20px;width:100%;margin-bottom:20px;">
-            ${popup_button}
-        </div> 
-        `;
-    popup.appendChild(modal_content);
-    body.appendChild(popup);
-    addAppBackdrop()
-
-    let closePopupBtn = document.getElementById("close_premium_reminder_popup");
-    closePopupBtn.addEventListener("click", function () {
-        body.removeChild(popup);
-        removeAppBackdrop()
-        trackCloseButtonClick('premium_feature_buy_popup_close');
-    });
-    
-    $('.popup-btn').on('click', function (event) {
-        let buttonType = $(this).attr('buttonType');
-        if (buttonType && buttonType.length > 0) {
-            trackButtonClick(`premium_feature_buy_popup_${buttonType}_button`)
-        }
-    });
-
-    trackButtonView('premium_feature_buy_popup');
+    return;
 }
 
 async function chat_link(){

@@ -73,17 +73,8 @@
                         <img id="add_business_img" style="width: 90%;
                         height: 90%;" src="logo/plus.png" />
                         <div id="add_business_text" style="color: #009A88; font-size: 14px;">
-                            <span id="non_premium_header_text">Free Trial - Buy Premium</span>
+                            <span id="non_premium_header_text">Prime Sender - Free Forever</span>
                             <span id="user_info_text"></span>
-                        </div>
-                        <div id="annual_upgrade_content" class="annual-upgrade-section" style="display: none;">
-                            <div class="upgrade-content-wrapper">
-                                <img src="logo/yellow_star2.png" style="width:30px; margin-right:4px;"/>
-                                <div class="upgrade-text-container">
-                                    <div class="upgrade-text-top">Upgrade & Save 40%</div>
-                                    <div class="upgrade-text-bottom">Go Annual</div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -102,26 +93,6 @@
                 </div>
             </div>
             <div id="show_premium_features" style="background: #000;display: none;width: 100%;">
-                <div id="annual_promo_banner">
-                    <div class="promo-banner-left">
-                        <div class="buy_annual_button_section">
-                            <a href="#" class="buy-annual-popup-btn" id="premium_annual_button" buttonType="advance_annual">
-                                <span class="annual_button_top_span"><img src="logo/yellow_star2.png" style="width:15px;"/>Upgrade & Save 40% with</span>
-                                <span style="font-weight:bold;">Advance Annual</span>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="promo-banner-right">
-                        <div class="promo-text-line">
-                            <img src="logo/multiple-users-white.png" class="promo-icon" />
-                            <span>68% of users like you chose Annual</span>
-                        </div>
-                        <div class="promo-text-line">
-                            <img src="logo/low-price.png" class="promo-icon" />
-                            <span>You save 40% extra with Annual Plan</span>
-                        </div>
-                    </div>
-                </div>
                 <!-- showing user info -->
                 <div class="premium_feature_block premium_featured_number" style="flex-direction: column;">
                     <div id="premium_enabled_on" style="color: #fff; font-weight: 400; font-size: 14px; line-height: 15.53px;">
@@ -129,55 +100,10 @@
                         <p id="customer_email"></p>
                         <p id="customer_parent_email"></p>
                     </div>
-                    <div style="margin: 0px; display: none;position:relative;align-items:flex-start;gap:10px;flex-direction:column;justify-content:center;" id="transfer_premium_button">
-                        <p id="show_country_selector" style="color: #009a88;margin: 0px; font-weight: 600; font-size: 14px; cursor: pointer;">Transfer premium to another number</p>
-                        <div id="premium_country_selector_container" style="position:relative;display:flex;gap:5px;align-items:center;" class="hide">
-                            <span style="font-size:13px;color:#fff;">From <span id="my_current_number" style="color:#009a88;font-weight:bold;"></span> to : </span>
-                            <input type="tel" id="country-code-input-2" class="country-code-input">
-                            <input type="number" id="premium_number_input" style="border-radius:5px;height:18px;padding:2px 5px;border:none;outline:none;width:110px;">
-                            <div id="request_transfer_btn" style="background:#009a88;padding:5px 10px;font-size:14px;border-radius:8px;font-weight:bold;color:#009a88;color:#fff;cursor:pointer;">Request Transfer</div>
-                        </div>
-                    </div>
-                    <p id="transfer_premium_error" style="color: #F40B0B;margin: 0px; font-size: 13px; display: none;">New number cannot be the same as the existing number.</p>
+                    <p class="free-plan-message" style="color: #fff; font-size: 14px; margin-top: 12px;">All Prime Sender features are unlocked for everyone, forever.</p>
                     <div class="premium_feature_block" id="buy_premium_block" style="border:none;"></div>
                 </div>
-                <div class="premium_feature_block mult_account_block hide" style="flex-direction: column;"></div>
-                <div class="premium_feature_block what_is_advancepromo_block" style="display: none;">
-                    <div style="display: flex; align-items: start; justify-content: center; flex-direction: column;">
-                        <span class="question" style="color: #009a88; margin: 5px 0px; font-weight: bold; font-size: 14px;">What is AdvancePromo?</span>
-                        <span class="answer"  style="color: #fff;">It's a free trial of Advance Premium provided to certain lucky users</span>
-                    </div>
-                </div>
-                <!-- <div class="premium_feature_block" id="buy_premium_block"></div> -->
-                <!-- showing user info -->
-                <!-- showing percentage utilisation of premium -->
-                <div class="premium_feature_block">
-                    <div class="premium-pie-section" style="color: #fff;">
-                        <!-- for the circle -->
-                        <div class="pie-container">
-                            <div id="pie">
-                                <span class="premium-utlisation-precentage">70%</span>
-                            </div>
-                        </div>
-                        <!-- for the text -->
-                        <div id="premium_utilisation_text" style="font-size:14px;">
-                        </div>
-                    </div>
-                </div>
-                <!-- showing percentage utilisation of premium -->
-                <!-- invoice feature -->
-                <div class="premium_feature_block invoice_feature_block">
-                    <div class="invoice_upper">
-                        <p style="color:#fff; font-weight:700; font-size:16px">Receipt: </p>
-                        <select name="invoice_month" id="invoice_input" style="height: fit-content; padding:5px">
-                        </select>
-                        <a id="download_invoice_button" class="CtaBtn" href="#">
-                            <img id="invoice_button_loader" src="logo/loader.svg" alt="" style="display: none;">
-                            <span id="invoice_button_text">Download</span>
-                        </a>
-                    </div>
-                </div>
-                <!-- invoice feature  -->
+                <div class="premium_feature_block" id="premium_utilisation_container" style="display:none;"></div>
 
                 <div class="premium_features_divider">
                     <p style="z-index: 1000; color: #fff; margin: 0px; margin-left: 16px;">Features :</p>
@@ -353,7 +279,6 @@
                     <div class="premium_feature_desc CtaBtn" id="request_call_premium" style="cursor: pointer;font-size: 14px;display: flex;"><img src="logo/phone-call.png"  style="width: 24px;margin-right: 16px;"/><div style="margin-top: 3px;" data-translate-text>Request for a call support</div></div> -->
                 </div>
                 <!-- <div class="premium_feature_block" id="buy_premium_block" style="text-align: center;"> -->
-                <!--     <div id="buy_premium_popup" class="premium_button CtaBtn">Buy Premium</div> -->
                 <!--     <div class="premium_feature_desc" style="margin-top: 8px;text-align: center;" data-translate-text>Payments are implemented using secure gateway like Stripe, Razorpay</div> -->
                 <!-- </div> -->
             </div>
